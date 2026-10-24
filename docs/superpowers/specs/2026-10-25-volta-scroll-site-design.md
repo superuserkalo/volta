@@ -34,7 +34,7 @@ Secondary goal: show Volta a faster, cheaper, ownable stack than Elementor (Next
 
 ## Constraints
 
-- Stack (user's): TypeScript, Next.js App Router, Vercel, Tailwind CSS, shadcn/ui, lucide + hugeicons, Resend, Effect. Plus three.js and anime.js v4 for the 3D and scroll motion.
+- Stack (user's): TypeScript, Next.js App Router, Vercel, Tailwind CSS, shadcn/ui, lucide + hugeicons, Resend, Effect. Plus three.js and anime.js v4 for the 3D and scroll motion. One WebGL canvas. Vercel Labs' vGPU was considered and **dropped by the user** (three.js only, for simplicity and device support).
 - Brand system taken from the live site: fonts Instrument Sans (UI/headings) and Martian Mono (labels, specs); colors `#131516` / `#1B1E20` backgrounds, `#33373A` lines, `#E9E9E9` text, `#AEB2B5` / `#868B8F` / `#5F6367` secondary greys, `#BB6622` copper accent (`#8A4A17` / `#CC8340` shades), `#5B7A94` custom-curve blue, `#4E8C6A` green (indicator). Logo SVGs in `docs/research/volta-site/logo-volta.svg` and `logo-bean.svg`.
 - Brand assets, photos (founder portrait `bene.jpg`), copy and video belong to VOLTA. The repo README must state this is an unofficial concept redesign, not affiliated with or endorsed by VOLTA, and the deployment must be `noindex` until VOLTA adopts it.
 - Must respect `prefers-reduced-motion` and work without WebGL.
@@ -95,7 +95,7 @@ Server Action written with Effect: validate the email with Effect Schema, add th
 ## Builder's calls (made by Claude, not confirmed by the user — flagged for review)
 
 - **Model is procedural three.js geometry in TypeScript**, not a Blender GLB: no asset pipeline, tiny download, every part addressable for explode/x-ray. Revisit only if fidelity can't get close enough.
-- **react-three-fiber + drei** as the three.js layer inside Next.js; **anime.js v4** (`onScroll`/timelines) drives the scroll progress that the scene reads. "vpgu" in the request is read as WebGPU: three.js WebGL2 renderer by default for broad mobile support; WebGPU is not required.
+- **react-three-fiber + drei** as the three.js layer inside Next.js, WebGL2 renderer for broad mobile support; **anime.js v4** (`onScroll`/timelines) drives the scroll progress that the scene reads.
 - **Mobile layout**: stage fills the screen; section text sits in a lower panel over a gradient; camera framing per beat is tuned separately for portrait. Device pixel ratio capped (≈1.5 mobile, 2 desktop).
 - **Loading**: first paint is the hero text plus a still poster frame taken from `volta-reveal.mp4`; the 3D scene fades in over it when ready. No-WebGL and reduced-motion get static per-section images/posters with all copy in the DOM, no scroll scrubbing.
 - **All copy is real DOM text** (SEO, accessibility), never baked into the canvas.
