@@ -97,7 +97,7 @@ export const KEYFRAMES = build([
   [7.0, { paper: 0, blueprint: 0 }],
 
   // 7 · lab — the cup tray folds down
-  [7.2, { trayOpen: 0, machineYaw: -0.55, shot: { focus: [0, 0.4, 0.1], dist: 3.4, elev: 0.15 } }],
+  [7.25, { trayOpen: 0, machineYaw: -0.55, shot: { focus: [0, 0.4, 0.1], dist: 3.4, elev: 0.15 } }],
   [7.6, { trayOpen: 1 }],
   [7.95, { machineYaw: -0.7 }],
 
