@@ -165,3 +165,8 @@ html[data-tone="light"] header .chrome-cta {
 html[data-tone="light"] [data-progress-rail] .tone-chrome-track {
   background: rgb(42 44 46 / 0.15);
 }
+
+/* Without the 3D stage (reduced motion / no WebGL), blueprint beats still get their paper */
+.no-3d [data-tone="light"] {
+  background: var(--paper);
+}

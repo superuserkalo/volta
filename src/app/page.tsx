@@ -12,11 +12,13 @@ import { Quote } from "@/components/sections/Quote";
 import { Repair } from "@/components/sections/Repair";
 import { Specs } from "@/components/sections/Specs";
 import { Temperature } from "@/components/sections/Temperature";
+import { Stage } from "@/three/Stage";
 
 export default function Home() {
   return (
     <>
       <StoryDriver />
+      <Stage />
       <Header />
       <ProgressRail />
       <main className="relative">

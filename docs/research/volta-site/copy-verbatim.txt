@@ -97,3 +97,13 @@ you@email.com
 VOLTA control panel: power, brewing, boiler and steam indicators above three buttons
 Benedict Heinzl
 VOLTA – The world’s most uncompromising portable espresso machine. Coming soon.
+
+--- chart labels (inline SVG on volta.coffee) ---
+PRESSURE PROFILE · BAR
+BOILER SETPOINT · °C
+DARK ROAST
+MEDIUM ROAST
+LIGHT ROAST
+0 S
+15 S
+30 S

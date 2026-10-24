@@ -30,6 +30,7 @@ export const copy = {
     body: "Up to 12 bar, fully profiled. Flat 9 bar for classics, lever-style decay for sweetness, or draw your own curve. The pump follows it. Every shot, every location.",
     meta: "FLAT · LEVER · CUSTOM · 0.5 BAR RESOLUTION",
     legend: ["Flat 9 bar", "Lever", "Custom"],
+    chartTitle: "PRESSURE PROFILE · BAR",
   },
 
   temperature: {
@@ -39,6 +40,7 @@ export const copy = {
     meta: "85.0 TO 99.0 °C · ±0.5 °C · 49 MM STANDARD",
     hold: "±0.5 °C hold",
     target: "TARGET",
+    chartTitle: "BOILER SETPOINT · °C",
   },
 
   control: {

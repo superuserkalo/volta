@@ -92,7 +92,7 @@ export const KEYFRAMES = build([
   [5.99, { batteryAttach: 1 }],
 
   // 6 · repair — blueprint again, the machine comes apart
-  [6.33, { machineYaw: -0.7, paper: 1, blueprint: 1, shot: { focus: [0, 0.5, 0], dist: 4.3, elev: 0.28, fit: 1.15 } }],
+  [6.33, { machineYaw: -0.7, paper: 1, blueprint: 1, shot: { focus: [0, 0.5, 0], dist: 4.6, elev: 0.28, fit: 1.15, screen: [0.72, 0.05] } }],
   [6.47, { explode: 1 }],
   [6.7, { explode: 1 }],
   [6.88, { explode: 0 }],
@@ -107,6 +107,6 @@ export const KEYFRAMES = build([
   [8.5, { shot: { focus: [0, 0.5, 0], dist: 4.4, screen: [0.75, 0] } }],
 
   // 9 · final CTA — back to the hero angle, tray open
-  [9.3, { machineYaw: HERO_YAW, shot: { dist: 4.2, elev: 0.25, screen: [0, -0.55] } }],
+  [9.3, { machineYaw: HERO_YAW, shot: { dist: 4.6, elev: 0.25, screen: [1.05, -0.15] } }],
   [10, {}],
 ]);
