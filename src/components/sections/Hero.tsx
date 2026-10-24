@@ -1,4 +1,5 @@
 import { copy } from "@/content/copy";
+import { SignupForm } from "@/components/signup/SignupForm";
 import { Section } from "./Section";
 
 export function Hero() {
@@ -18,7 +19,7 @@ export function Hero() {
         {c.body}
       </p>
       <div data-reveal className="mt-5 md:mt-8">
-        <div data-slot="signup" data-variant="hero" />
+        <SignupForm variant="hero" />
         <p className="mt-3 flex items-start gap-2 text-xs text-text-3 md:text-sm">
           <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-copper" aria-hidden />
           {c.note}

@@ -1,4 +1,5 @@
 import { copy } from "@/content/copy";
+import { SignupForm } from "@/components/signup/SignupForm";
 import { Section } from "./Section";
 
 export function FinalCta() {
@@ -14,7 +15,7 @@ export function FinalCta() {
           {c.body}
         </p>
         <div data-reveal className="mx-auto mt-6 max-w-[40rem] md:mt-9">
-          <div data-slot="signup" data-variant="cta" />
+          <SignupForm variant="cta" />
           <p className="mt-3 text-xs text-text-4 md:text-sm">{c.note}</p>
         </div>
       </div>
