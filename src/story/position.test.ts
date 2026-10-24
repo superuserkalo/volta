@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { beatAt, damp, positionFromScroll } from "./position";
+import { beatAt, damp, positionFromScroll, scrollFromPosition } from "./position";
 
 describe("beatAt", () => {
   it("maps story positions to beats", () => {
@@ -36,5 +36,19 @@ describe("damp", () => {
     const one = damp(0, 1, 8, 1 / 30);
     const two = damp(damp(0, 1, 8, 1 / 60), 1, 8, 1 / 60);
     expect(one).toBeCloseTo(two, 6);
+  });
+});
+
+describe("scrollFromPosition", () => {
+  const tops = [0, 100, 300];
+  const heights = [100, 200, 50];
+  it("inverts positionFromScroll", () => {
+    for (const y of [0, 37, 100, 250, 310]) {
+      expect(scrollFromPosition(positionFromScroll(y, tops, heights), tops, heights)).toBeCloseTo(y, 6);
+    }
+  });
+  it("clamps out-of-range positions", () => {
+    expect(scrollFromPosition(-2, tops, heights)).toBe(0);
+    expect(scrollFromPosition(7, tops, heights)).toBe(350);
   });
 });

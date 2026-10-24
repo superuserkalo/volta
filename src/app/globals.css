@@ -93,6 +93,7 @@
   html {
     background: var(--bg);
     color-scheme: dark;
+    overflow-anchor: none;
   }
   body {
     background: var(--bg);
@@ -150,4 +151,17 @@
   [data-tone="light"] .beat-panel::before {
     background: linear-gradient(to bottom, transparent, var(--paper) 26%);
   }
+}
+
+/* Fixed chrome follows the stage: dark ink while the blueprint paper is showing */
+html[data-tone="light"] header .text-text,
+html[data-tone="light"] header .chrome-cta {
+  color: var(--ink);
+}
+html[data-tone="light"] header .chrome-cta {
+  border-color: rgb(42 44 46 / 0.4);
+  background: rgb(217 214 211 / 0.4);
+}
+html[data-tone="light"] [data-progress-rail] .tone-chrome-track {
+  background: rgb(42 44 46 / 0.15);
 }

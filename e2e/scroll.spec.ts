@@ -1,0 +1,69 @@
+import { expect, test, type Page } from "@playwright/test";
+import { beatAt } from "../src/story/position";
+
+const storyP = (page: Page) => page.evaluate(() => (window as any).__volta.story.get() as number);
+const beatNow = async (page: Page) => beatAt(await storyP(page)).id;
+
+async function scrollToBeat(page: Page, id: string, fraction: number) {
+  await page.evaluate(
+    ([id, f]) => {
+      const el = document.getElementById(id as string)!;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo(0, top + el.offsetHeight * (f as number));
+    },
+    [id, fraction] as const,
+  );
+  await page.waitForTimeout(150);
+}
+
+test("story position follows scroll", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => (window as any).__volta);
+  await scrollToBeat(page, "power", 0.5);
+  const p = await storyP(page);
+  expect(p).toBeGreaterThan(5.4);
+  expect(p).toBeLessThan(5.6);
+});
+
+test("header CTA jumps to the final section", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => (window as any).__volta);
+  await page.locator("header a.chrome-cta").click();
+  await expect.poll(() => beatNow(page), { timeout: 1500 }).toBe("cta");
+});
+
+test("reload mid-page keeps the current beat", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => (window as any).__volta);
+  await scrollToBeat(page, "power", 0.4);
+  await page.reload();
+  await page.waitForFunction(() => (window as any).__volta);
+  await expect.poll(() => beatNow(page)).toBe("power");
+});
+
+test("resize keeps the current beat", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => (window as any).__volta);
+  await scrollToBeat(page, "temperature", 0.5);
+  const size = page.viewportSize()!;
+  await page.setViewportSize({ width: size.height, height: size.width });
+  await page.waitForTimeout(300);
+  expect(await beatNow(page)).toBe("temperature");
+});
+
+test("progress rail appears in the numbered sections", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => (window as any).__volta);
+  const rail = page.locator("[data-progress-rail]");
+  await expect(rail).toHaveAttribute("data-visible", "false");
+  await scrollToBeat(page, "pressure", 0.4);
+  await expect(rail).toHaveAttribute("data-visible", "true");
+});
+
+test("revealed text is visible once its section is on screen", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => (window as any).__volta);
+  await scrollToBeat(page, "control", 0.3);
+  const h = page.locator("#control h2");
+  await expect.poll(() => h.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.95);
+});

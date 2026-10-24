@@ -15,6 +15,15 @@ export function positionFromScroll(scrollY: number, tops: readonly number[], hei
   return 0;
 }
 
+/** Inverse of positionFromScroll: the scroll offset that shows story position `p`. */
+export function scrollFromPosition(p: StoryPosition, tops: readonly number[], heights: readonly number[]): number {
+  const n = tops.length;
+  if (n === 0 || p <= 0) return tops[0] ?? 0;
+  if (p >= n) return tops[n - 1] + heights[n - 1];
+  const i = Math.floor(p);
+  return tops[i] + (p - i) * heights[i];
+}
+
 export function beatAt(p: StoryPosition): { id: BeatId; t: number } {
   const last = BEATS.length - 1;
   if (p <= 0) return { id: BEATS[0].id, t: 0 };
