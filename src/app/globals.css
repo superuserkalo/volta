@@ -118,3 +118,36 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
+/* Light (blueprint) beats: dark ink on paper */
+@custom-variant tone-light (&:where([data-tone="light"], [data-tone="light"] *));
+
+[data-tone="light"] {
+  color: var(--ink);
+  --line: rgb(42 44 46 / 0.22);
+}
+[data-tone="light"] .kicker {
+  color: var(--copper-dark);
+}
+[data-tone="light"] .text-text-2 {
+  color: rgb(42 44 46 / 0.78);
+}
+[data-tone="light"] .text-text-3,
+[data-tone="light"] .text-text-4 {
+  color: rgb(42 44 46 / 0.58);
+}
+
+/* Mobile: text panels sit over the 3D stage on a fade so they stay readable */
+@media (max-width: 767px) {
+  .beat-panel::before {
+    content: "";
+    position: absolute;
+    inset: 38% 0 0 0;
+    z-index: -1;
+    background: linear-gradient(to bottom, transparent, var(--bg) 26%);
+    pointer-events: none;
+  }
+  [data-tone="light"] .beat-panel::before {
+    background: linear-gradient(to bottom, transparent, var(--paper) 26%);
+  }
+}
