@@ -1,0 +1,12 @@
+<svg viewBox="0 0 800 560" style="display:block;width:100%;flex:1;min-height:0" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Roast-matched boiler setpoints">
+  <text x="70" y="66" fill="#868B8F" font-family="'Martian Mono',monospace" font-size="17" letter-spacing="1.4">BOILER SETPOINT · °C</text>
+  <text x="70" y="146" fill="#AEB2B5" font-family="'Martian Mono',monospace" font-size="17" letter-spacing="1.4">DARK ROAST</text><text x="760" y="146" fill="#E9E9E9" font-family="'Martian Mono',monospace" font-size="20" text-anchor="end">88.0</text>
+  <line x1="70" y1="176" x2="760" y2="176" stroke="#33373A" stroke-width="1"></line><line x1="193" y1="176" x2="243" y2="176" stroke="#474B4E" stroke-width="5"></line><circle cx="218" cy="176" r="7" fill="#BB6622"></circle>
+  <text x="70" y="266" fill="#AEB2B5" font-family="'Martian Mono',monospace" font-size="17" letter-spacing="1.4">MEDIUM ROAST</text><text x="760" y="266" fill="#E9E9E9" font-family="'Martian Mono',monospace" font-size="20" text-anchor="end">92.0</text>
+  <line x1="70" y1="296" x2="760" y2="296" stroke="#33373A" stroke-width="1"></line><line x1="390" y1="296" x2="440" y2="296" stroke="#474B4E" stroke-width="5"></line><circle cx="415" cy="296" r="7" fill="#BB6622"></circle>
+  <text x="70" y="386" fill="#AEB2B5" font-family="'Martian Mono',monospace" font-size="17" letter-spacing="1.4">LIGHT ROAST</text><text x="760" y="386" fill="#E9E9E9" font-family="'Martian Mono',monospace" font-size="20" text-anchor="end">96.0</text>
+  <line x1="70" y1="416" x2="760" y2="416" stroke="#33373A" stroke-width="1"></line><line x1="587" y1="416" x2="637" y2="416" stroke="#474B4E" stroke-width="5"></line><circle cx="612" cy="416" r="7" fill="#BB6622"></circle>
+  <line x1="70" y1="486" x2="760" y2="486" stroke="#33373A" stroke-width="1"></line>
+  <g stroke="#474B4E" stroke-width="1"><line x1="70" y1="480" x2="70" y2="492"></line><line x1="415" y1="480" x2="415" y2="492"></line><line x1="760" y1="480" x2="760" y2="492"></line></g>
+  <g fill="#5F6367" font-family="'Martian Mono',monospace" font-size="17"><text x="70" y="522">85.0</text><text x="415" y="522" text-anchor="middle">92.0</text><text x="760" y="522" text-anchor="end">99.0</text></g>
+</svg>

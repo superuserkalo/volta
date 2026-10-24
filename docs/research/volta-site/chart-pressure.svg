@@ -1,0 +1,10 @@
+<svg viewBox="0 0 800 560" style="display:block;width:100%;flex:1;min-height:0" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Pressure profile curves: flat, lever, custom">
+  <g stroke="#33373A" stroke-width="1"><line x1="70" y1="127" x2="760" y2="127"></line><line x1="70" y1="257" x2="760" y2="257"></line><line x1="70" y1="387" x2="760" y2="387"></line><line x1="70" y1="517" x2="760" y2="517"></line></g>
+  <g fill="#5F6367" font-family="'Martian Mono',monospace" font-size="17" text-anchor="end"><text x="58" y="132">12</text><text x="58" y="262">9</text><text x="58" y="392">6</text><text x="58" y="522">3</text></g>
+  <text x="70" y="66" fill="#868B8F" font-family="'Martian Mono',monospace" font-size="17" letter-spacing="1.4">PRESSURE PROFILE · BAR</text>
+  <g fill="#5F6367" font-family="'Martian Mono',monospace" font-size="17"><text x="70" y="548">0 S</text><text x="400" y="548" text-anchor="middle">15 S</text><text x="760" y="548" text-anchor="end">30 S</text></g>
+  <path d="M 70 517 C 110 517 120 350 170 330 C 220 310 250 210 330 205 C 410 200 430 300 520 310 C 610 320 650 240 760 250" fill="none" stroke="#5B7A94" stroke-width="2.5" stroke-dasharray="7 8"></path>
+  <path d="M 70 517 L 130 517 C 170 517 175 240 235 235 C 260 233 270 245 320 270 C 450 335 600 420 760 445" fill="none" stroke="#868B8F" stroke-width="2.5"></path>
+  <path d="M 70 517 L 140 517 C 190 517 195 257 250 257 L 760 257" fill="none" stroke="#BB6622" stroke-width="3.5"></path>
+  <circle cx="760" cy="257" r="6" fill="#BB6622"></circle>
+</svg>
