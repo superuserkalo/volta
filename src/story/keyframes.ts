@@ -9,6 +9,8 @@ export interface Shot {
   fov: number;
   /** Landscape screen offset of the subject, in half-heights (x → right, y → up). */
   screen: readonly [number, number];
+  /** Half-width of what must stay on screen; portrait pulls the camera back until it fits. */
+  fit: number;
 }
 
 type Flat = Omit<SceneState, "camera"> & { shot: Shot };
@@ -17,7 +19,7 @@ type Patch = Partial<Omit<Flat, "shot">> & { shot?: Partial<Shot> };
 const HERO_YAW = -0.8;
 
 const base: Flat = {
-  shot: { focus: [0, 0.5, 0], dist: 3.7, elev: 0.18, fov: 30, screen: [0.5, 0] },
+  shot: { focus: [0, 0.48, 0], dist: 3.7, elev: 0.36, fov: 30, screen: [0.5, 0], fit: 0.62 },
   machineYaw: HERO_YAW,
   paper: 0,
   blueprint: 0,
@@ -29,7 +31,7 @@ const base: Flat = {
   battery: "b-mount" as BatteryVariant,
   highlight: null as Highlight,
   boilerGlow: 0,
-  panelLights: 0,
+  panelLights: 1,
 };
 
 /** Each keyframe starts from the previous one, so only what changes is written. */
@@ -47,34 +49,34 @@ function build(steps: readonly [number, Patch][]) {
 export const KEYFRAMES = build([
   // 0 · hero — their render's 3/4 view
   [0, {}],
-  [0.85, { machineYaw: HERO_YAW - 0.12 }],
+  [0.7, { machineYaw: HERO_YAW - 0.1 }],
 
   // 1 · specs — blueprint, side elevation, callouts
-  [1.0, { shot: { dist: 3.9, elev: 0.12 } }],
-  [1.12, { paper: 1, blueprint: 1, machineYaw: -1.2 }],
+  [1.0, { shot: { dist: 3.4, elev: 0.2, screen: [0.12, 0.2], fit: 0.95 } }],
+  [1.12, { paper: 1, blueprint: 1, xray: 0.65, machineYaw: -1.2 }],
   [1.4, { callouts: 1 }],
   [1.75, { callouts: 1, machineYaw: -1.35 }],
   [1.88, { callouts: 0 }],
-  [2.0, { paper: 0, blueprint: 0, shot: { dist: 3.4 } }],
+  [2.0, { paper: 0, blueprint: 0 }],
 
   // 2 · pressure — x-ray, pump
-  [2.2, { xray: 1, highlight: "pump", machineYaw: -1.25, shot: { focus: [0, 0.42, -0.1], dist: 3.0 } }],
+  [2.28, { xray: 1, highlight: "pump", machineYaw: -1.25, shot: { focus: [0, 0.42, -0.1], dist: 3.0, screen: [0.5, 0], fit: 0.6 } }],
   [2.9, { machineYaw: -1.1 }],
 
   // 3 · temperature — boiler glows
   [3.05, { highlight: "boiler", shot: { focus: [0, 0.6, 0.05], dist: 2.9 } }],
   [3.5, { boilerGlow: 1 }],
-  [3.9, { machineYaw: -0.95 }],
+  [3.85, { machineYaw: -0.95 }],
 
   // 4 · control — solid again, front panel close-up, lights in order
-  [4.12, { xray: 0, highlight: null, boilerGlow: 0, machineYaw: -0.35, shot: { focus: [0, 0.82, 0.45], dist: 1.9, elev: 0.32 } }],
-  [4.2, { panelLights: 0 }],
+  [4.2, { xray: 0, highlight: null, boilerGlow: 0, machineYaw: -0.35, shot: { focus: [0, 0.82, 0.45], dist: 1.9, elev: 0.32, fit: 0.32 } }],
+  [4.25, { panelLights: 1 }],
   [4.7, { panelLights: 4 }],
   [4.85, { highlight: "modular-port", shot: { focus: [0, 0.95, 0.25], dist: 2.1, elev: 0.5 } }],
-  [4.95, {}],
+  [4.9, {}],
 
   // 5 · power — turn to the back, B-mount clicks on, then the adapters
-  [5.26, { highlight: null, machineYaw: 2.45, batteryAttach: 0, shot: { focus: [0, 0.45, -0.3], dist: 3.0, elev: 0.15 } }],
+  [5.26, { highlight: null, machineYaw: 2.45, batteryAttach: 0, shot: { focus: [0, 0.45, -0.3], dist: 3.0, elev: 0.15, fit: 0.62 } }],
   [5.36, { batteryAttach: 1 }],
   [5.4, {}],
   [5.48, { batteryAttach: 0 }],
@@ -90,14 +92,14 @@ export const KEYFRAMES = build([
   [5.99, { batteryAttach: 1 }],
 
   // 6 · repair — blueprint again, the machine comes apart
-  [6.33, { machineYaw: -0.7, paper: 1, blueprint: 1, shot: { focus: [0, 0.5, 0], dist: 4.3, elev: 0.28 } }],
+  [6.33, { machineYaw: -0.7, paper: 1, blueprint: 1, shot: { focus: [0, 0.5, 0], dist: 4.3, elev: 0.28, fit: 1.15 } }],
   [6.47, { explode: 1 }],
   [6.7, { explode: 1 }],
   [6.88, { explode: 0 }],
   [7.0, { paper: 0, blueprint: 0 }],
 
   // 7 · lab — the cup tray folds down
-  [7.25, { trayOpen: 0, machineYaw: -0.55, shot: { focus: [0, 0.4, 0.1], dist: 3.4, elev: 0.15 } }],
+  [7.25, { trayOpen: 0, machineYaw: -0.55, shot: { focus: [0, 0.4, 0.1], dist: 3.4, elev: 0.15, fit: 0.7 } }],
   [7.6, { trayOpen: 1 }],
   [7.95, { machineYaw: -0.7 }],
 

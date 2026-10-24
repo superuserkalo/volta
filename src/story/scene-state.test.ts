@@ -71,8 +71,10 @@ describe("sceneStateAt", () => {
       for (const k of Object.keys(a) as (keyof typeof a)[]) {
         expect(Math.abs(b[k] - a[k]), `${k} at p=${p.toFixed(3)}`).toBeLessThan(0.12);
       }
+      // camera moves less than ~1.5% of its distance per step (no cuts)
       const dc = Math.hypot(...s.camera.position.map((v, i) => v - prev.camera.position[i]));
-      expect(dc, `camera at p=${p.toFixed(3)}`).toBeLessThan(0.05);
+      const dist = Math.hypot(...s.camera.position.map((v, i) => v - s.camera.target[i]));
+      expect(dc / dist, `camera at p=${p.toFixed(3)}`).toBeLessThan(0.015);
       prev = s;
     }
   });

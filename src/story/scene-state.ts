@@ -70,6 +70,7 @@ function mixFlat(a: Flat, b: Flat, k: number): Flat {
       elev: mix(a.shot.elev, b.shot.elev, k),
       fov: mix(a.shot.fov, b.shot.fov, k),
       screen: [mix(a.shot.screen[0], b.shot.screen[0], k), mix(a.shot.screen[1], b.shot.screen[1], k)],
+      fit: mix(a.shot.fit, b.shot.fit, k),
     },
     machineYaw: mix(a.machineYaw, b.machineYaw, k),
     paper: mix(a.paper, b.paper, k),
@@ -92,10 +93,11 @@ function mixFlat(a: Flat, b: Flat, k: number): Flat {
  * framing. `screen` offsets the subject from the screen center so it sits
  * beside the text (landscape) or above the text panel (portrait).
  */
-function toCamera(shot: Shot, framing: Framing): SceneState["camera"] {
-  const dist = framing === "portrait" ? shot.dist * 1.45 : shot.dist;
-  const [sx, sy] = framing === "portrait" ? [0, 0.42] : shot.screen;
+function toCamera(shot: Shot, framing: Framing, aspect: number): SceneState["camera"] {
   const fovRad = (shot.fov * Math.PI) / 180;
+  const fitDist = shot.fit / (Math.tan(fovRad / 2) * aspect) + shot.fit; // + depth margin
+  const dist = framing === "portrait" ? Math.max(shot.dist * 1.15, fitDist) : shot.dist;
+  const [sx, sy] = framing === "portrait" ? [0, 0.42] : shot.screen;
   const halfH = Math.tan(fovRad / 2) * dist;
   // Moving the look-at point opposite to the desired screen offset shifts the subject.
   const target: Vec3 = [shot.focus[0] - sx * halfH, shot.focus[1] - sy * halfH, shot.focus[2]];
@@ -103,7 +105,8 @@ function toCamera(shot: Shot, framing: Framing): SceneState["camera"] {
   return { position, target, fov: shot.fov };
 }
 
-export function sceneStateAt(p: StoryPosition, framing: Framing): SceneState {
+/** `aspect` = viewport width / height; defaults to a typical laptop or phone for the framing. */
+export function sceneStateAt(p: StoryPosition, framing: Framing, aspect = framing === "portrait" ? 390 / 844 : 1.6): SceneState {
   const frames = KEYFRAMES;
   let flat: Flat;
   if (p <= frames[0].at) flat = frames[0].state;
@@ -116,5 +119,5 @@ export function sceneStateAt(p: StoryPosition, framing: Framing): SceneState {
     flat = mixFlat(a.state, b.state, smoothstep((p - a.at) / (b.at - a.at)));
   }
   const { shot, ...rest } = flat;
-  return { ...rest, camera: toCamera(shot, framing) };
+  return { ...rest, camera: toCamera(shot, framing, aspect) };
 }
