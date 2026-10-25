@@ -2,7 +2,7 @@
 
 import { ContactShadows, Environment, Lightformer } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { damp } from "@/story/position";
 import type { Framing, SceneState } from "@/story/scene-state";
@@ -40,6 +40,10 @@ function Rig({
   const bg = useMemo(() => new THREE.Color(), []);
   const pos = useMemo(() => new THREE.Vector3(), []);
   const tgt = useMemo(() => new THREE.Vector3(), []);
+  useEffect(() => {
+    // dev only: lets scripts read what the stage is showing
+    if (process.env.NODE_ENV !== "production") (window as unknown as { __voltaStage: unknown }).__voltaStage = stateRef;
+  }, [stateRef]);
   useFrame((st, dtRaw) => {
     const dt = Math.min(dtRaw, 0.1);
     const framing: Framing = size.height > size.width ? "portrait" : "landscape";

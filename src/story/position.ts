@@ -36,5 +36,6 @@ export function beatAt(p: StoryPosition): { id: BeatId; t: number } {
 
 /** Exponential smoothing toward a target; frame-rate independent. */
 export function damp(current: number, target: number, lambda: number, dt: number): number {
+  if (lambda === Infinity) return target; // no smoothing (and no Infinity × 0 = NaN on a zero-length frame)
   return target + (current - target) * Math.exp(-lambda * dt);
 }

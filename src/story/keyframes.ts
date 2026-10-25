@@ -49,7 +49,7 @@ function build(steps: readonly ([number, Patch] | [number, Patch, Ease])[]) {
 }
 
 /** Middle of each battery's hold (seated, not moving), in order B-mount, V-mount, A-mount, power-tool. */
-export const POWER_HOLDS = [5.275, 5.435, 5.6, 5.77] as const;
+export const POWER_HOLDS = [5.235, 5.415, 5.595, 5.79] as const;
 
 // Timing rule: a beat's copy is pinned for (length − 100vh) and the next
 // beat's copy scrolls in during the last 100vh. Every move that could cross
@@ -88,21 +88,21 @@ export const KEYFRAMES = build([
   [5.0, {}],
 
   // 5 · power — once its copy is in: pull back and turn to the back in one move, battery seated the whole way
-  [5.11, { machineYaw: 1.0, shot: { focus: [0, 0.5, -0.05], elev: 0.28, fit: 0.74, side: 1 } }],
-  [5.24, { machineYaw: 2.45, shot: { focus: [0, 0.45, -0.3], elev: 0.15, fit: 0.64 } }],
-  // then each pack holds for ~40vh of scroll; between holds the old one comes off and the next locks on quickly
-  [5.31, {}],
-  [5.35, { batteryAttach: 0 }],
-  [5.355, { battery: "v-mount" }],
-  [5.395, { batteryAttach: 1 }],
-  [5.475, {}],
-  [5.515, { batteryAttach: 0 }],
-  [5.52, { battery: "a-mount" }],
+  [5.1, { machineYaw: 1.0, shot: { focus: [0, 0.5, -0.05], elev: 0.28, fit: 0.74, side: 1 } }],
+  [5.2, { machineYaw: 2.45, shot: { focus: [0, 0.45, -0.3], elev: 0.15, fit: 0.64 } }],
+  // then each pack holds for ~40vh of scroll; between holds the old one comes off (~30vh) and the next locks on (~33vh)
+  [5.27, {}],
+  [5.32, { batteryAttach: 0 }],
+  [5.325, { battery: "v-mount" }],
+  [5.38, { batteryAttach: 1 }],
+  [5.45, {}],
+  [5.5, { batteryAttach: 0 }],
+  [5.505, { battery: "a-mount" }],
   [5.56, { batteryAttach: 1 }],
-  [5.64, {}],
+  [5.63, {}],
   [5.68, { batteryAttach: 0 }],
   [5.685, { battery: "power-tool" }],
-  [5.725, { batteryAttach: 1 }],
+  [5.74, { batteryAttach: 1 }],
   [5.84, {}],
 
   // 6 · repair — blueprint again, the machine comes apart and goes back together

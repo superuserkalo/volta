@@ -61,7 +61,7 @@ describe("sceneStateAt", () => {
     expect(at(4.8).highlight).toBe("modular-port");
   });
   it("control → power: the battery stays seated while the machine turns to its back", () => {
-    for (let p = 4.84; p <= 5.31; p += 0.01) {
+    for (let p = 4.84; p <= 5.27; p += 0.01) {
       expect(at(p).batteryAttach, `p=${p.toFixed(2)}`).toBeCloseTo(1);
       expect(at(p).battery).toBe("b-mount");
     }
@@ -69,8 +69,8 @@ describe("sceneStateAt", () => {
   it("power: each pack is seated and held at its stop, in order, while the copy is pinned", () => {
     const order = ["b-mount", "v-mount", "a-mount", "power-tool"];
     POWER_HOLDS.forEach((stop, i) => {
-      // pinned power copy: until 100vh before the end of the 500vh beat
-      expect(stop).toBeLessThan(5.8);
+      // pinned power copy: until 100vh before the end of the 600vh beat
+      expect(stop).toBeLessThan(5.83);
       for (const d of [-0.02, 0, 0.02]) {
         expect(at(stop + d).battery).toBe(order[i]);
         expect(at(stop + d).batteryAttach).toBeCloseTo(1);

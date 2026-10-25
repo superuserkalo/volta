@@ -2,25 +2,35 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import { damp } from "@/story/position";
 import { sceneStateAt } from "@/story/scene-state";
 import { story } from "@/story/store";
+import type { StateSource } from "./Scene";
 
 const Scene = dynamic(() => import("./Scene"), { ssr: false });
 
 type Mode = "pending" | "3d" | "static";
 
 /**
- * True once after the story jumps instead of scrolling (reload restoring the
- * scroll, an anchor link, a drag of the scrollbar): the stage then cuts to the
- * new shot instead of flying the machine across whatever is on screen.
+ * The stage follows a smoothed copy of the scroll position and builds the whole
+ * scene from that one value. Every part of a move stays in step: a pack can
+ * only swap where the timeline has it fully off, and nothing lags behind on its
+ * own. A jump (reload restoring the scroll, an anchor link) is taken at once and
+ * the stage cuts to the new shot instead of flying the machine across the page.
  */
-let lastP = -1;
-function jumped() {
-  const p = story.get();
-  const cut = lastP < 0 || Math.abs(p - lastP) > 0.5;
-  lastP = p;
-  return cut;
+const follow = { p: 0, raw: -1, t: -1, cut: true };
+function followed(lambda: number): StateSource {
+  return (framing, aspect, elapsed) => {
+    const raw = story.get();
+    const dt = follow.t < 0 ? 0 : Math.min(0.1, Math.max(0, elapsed - follow.t));
+    follow.t = elapsed;
+    follow.cut = follow.raw < 0 || Math.abs(raw - follow.raw) > 0.5;
+    follow.raw = raw;
+    follow.p = follow.cut ? raw : damp(follow.p, raw, lambda, dt);
+    return sceneStateAt(follow.p, framing, aspect);
+  };
 }
+const jumped = () => follow.cut;
 
 function detectMode(): Mode {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return "static";
@@ -72,10 +82,11 @@ export function Stage() {
         <div className="absolute inset-0 transition-opacity duration-700" style={{ opacity: ready ? 1 : 0 }}>
           <Scene
             initial={sceneStateAt(story.get(), mobile ? "portrait" : "landscape")}
-            lambda={mobile ? 5 : 6}
+            // the smoothing happens on the scroll position (see `followed`), so the stage shows it as is
+            lambda={Infinity}
             dprMax={mobile ? 1.5 : 2}
             onReady={() => setReady(true)}
-            source={(framing, aspect) => sceneStateAt(story.get(), framing, aspect)}
+            source={followed(mobile ? 5 : 6)}
             cut={jumped}
           />
         </div>

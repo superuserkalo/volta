@@ -17,7 +17,7 @@ export function PowerCards() {
           key={card.title}
           data-power-card={i}
           data-active={i === active}
-          className="group rounded-md border border-line bg-bg/70 px-4 py-3 backdrop-blur-sm transition-[border-color,box-shadow] duration-500 data-[active=true]:border-copper data-[active=true]:shadow-[inset_3px_0_0_var(--copper)] md:px-5 md:py-4"
+          className="group rounded-md border border-line bg-bg/90 px-4 py-3 transition-[border-color,box-shadow] duration-500 data-[active=true]:border-copper data-[active=true]:shadow-[inset_3px_0_0_var(--copper)] md:px-5 md:py-4"
         >
           <p className="kicker !mb-1 text-[0.62rem] md:text-[0.7rem]">{card.tag}</p>
           <p className="text-base md:text-xl">{card.title}</p>

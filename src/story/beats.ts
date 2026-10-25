@@ -19,7 +19,7 @@ export const BEATS: readonly { id: BeatId; lengthVh: number; tone: Tone }[] = [
   { id: "pressure", lengthVh: 200, tone: "dark" },
   { id: "temperature", lengthVh: 200, tone: "dark" },
   { id: "control", lengthVh: 200, tone: "dark" },
-  { id: "power", lengthVh: 500, tone: "dark" },
+  { id: "power", lengthVh: 600, tone: "dark" },
   { id: "repair", lengthVh: 400, tone: "light" },
   { id: "lab", lengthVh: 200, tone: "dark" },
   { id: "quote", lengthVh: 250, tone: "dark" },
