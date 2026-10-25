@@ -5,7 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { damp } from "@/story/position";
-import type { Framing, SceneState } from "@/story/scene-state";
+import type { Framing, SceneState, Vec3 } from "@/story/scene-state";
 import { SceneStateContext } from "./machine/context";
 import { Machine } from "./machine/Machine";
 import { Callouts } from "./machine/Callouts";
@@ -29,6 +29,12 @@ const PACK_ON_SECONDS = 0.5;
 
 export type StateSource = (framing: Framing, aspect: number, elapsed: number) => SceneState;
 
+const dampVec = (a: Vec3, b: Vec3, lambda: number, dt: number): Vec3 => [
+  damp(a[0], b[0], lambda, dt),
+  damp(a[1], b[1], lambda, dt),
+  damp(a[2], b[2], lambda, dt),
+];
+
 function cloneState(s: SceneState): SceneState {
   return { ...s, camera: { position: [...s.camera.position], target: [...s.camera.target], fov: s.camera.fov } };
 }
@@ -51,7 +57,7 @@ function Rig({
   const tgt = useMemo(() => new THREE.Vector3(), []);
   useEffect(() => {
     // dev only: lets scripts read what the stage is showing
-    if (process.env.NODE_ENV !== "production") (window as unknown as { __voltaStage: unknown }).__voltaStage = stateRef;
+    if (process.env.NODE_ENV !== "production") Object.assign(window, { __voltaStage: stateRef });
   }, [stateRef]);
   useFrame((st, dtRaw) => {
     const dt = Math.min(dtRaw, 0.1);
@@ -83,8 +89,8 @@ function Rig({
     cur.trayOpen = cur.trayOpen < target.trayOpen ? Math.min(target.trayOpen, cur.trayOpen + step) : Math.max(target.trayOpen, cur.trayOpen - step);
     cur.focus = target.focus;
     const c = cur.camera;
-    c.position = c.position.map((v, i) => damp(v, target.camera.position[i], lambda, dt)) as unknown as SceneState["camera"]["position"];
-    c.target = c.target.map((v, i) => damp(v, target.camera.target[i], lambda, dt)) as unknown as SceneState["camera"]["target"];
+    c.position = dampVec(c.position, target.camera.position, lambda, dt);
+    c.target = dampVec(c.target, target.camera.target, lambda, dt);
     c.fov = damp(c.fov, target.camera.fov, lambda, dt);
 
     const cam = camera as THREE.PerspectiveCamera;

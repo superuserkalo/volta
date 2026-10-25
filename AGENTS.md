@@ -13,5 +13,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Always commit, push, and deploy continuously.** After every meaningful, working change: commit to `main`, `git push origin main`, and deploy to Vercel. Don't ask first and don't batch it up for later.
 - Work directly on `main`. No feature branches, worktrees, or process overhead.
 - Before each commit, run `pnpm test`, `pnpm lint`, and `pnpm build` (and `pnpm e2e` for UI changes). Only commit, push, and deploy when they pass.
+- TypeScript: never use `any` (no `: any`, `as any`, `<any>`, or `any[]`), and no `as unknown as` double casts to get around the types. Use real types, `unknown` plus narrowing, or generics. ESLint enforces both.
 - Copy rule: every visible string comes verbatim from volta.coffee (`docs/research/volta-site/copy-verbatim.txt`), guarded by `src/content/copy.test.ts`. Allowed exceptions live in `src/content/allowed-edits.ts`.
 - Design and plan: `docs/superpowers/specs/` and `docs/superpowers/plans/`.

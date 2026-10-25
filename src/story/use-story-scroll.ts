@@ -62,7 +62,7 @@ export function useStoryScroll() {
     window.addEventListener("scroll", update, { passive: true });
 
     if (process.env.NODE_ENV !== "production") {
-      (window as unknown as { __volta: unknown }).__volta = { story };
+      Object.assign(window, { __volta: { story } });
     }
 
     // Text reveals: each section's copy rises in once per direction.
