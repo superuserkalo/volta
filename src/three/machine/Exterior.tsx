@@ -132,12 +132,13 @@ function HeadUnit({ children }: { children?: React.ReactNode }) {
     ],
     [],
   );
-  const labels = slantPoint(0.76, 0.0062);
+  // Labels sit at t 0.80 / 0.56 on the slant, each light centred just above its label (x ±0.11).
+  const labels = slantPoint(0.68, 0.0062);
   const leds: { kind: "led-0" | "led-1" | "led-2" | "led-3"; x: number; t: number }[] = [
-    { kind: "led-0", x: -0.13, t: 0.9 },
-    { kind: "led-1", x: -0.13, t: 0.62 },
-    { kind: "led-2", x: 0.13, t: 0.9 },
-    { kind: "led-3", x: 0.13, t: 0.62 },
+    { kind: "led-0", x: -0.11, t: 0.9 },
+    { kind: "led-1", x: -0.11, t: 0.66 },
+    { kind: "led-2", x: 0.11, t: 0.9 },
+    { kind: "led-3", x: 0.11, t: 0.66 },
   ];
   const [buttonZ, buttonY] = slantPoint(0.3, 0.012);
   const iconAt = ((): [number, number] => {

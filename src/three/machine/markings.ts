@@ -4,18 +4,21 @@
 type Fonts = { sans: string; mono: string };
 const INK = "rgba(34, 36, 38, 0.82)";
 
-/** POWER / BREWING on the left of the slanted face, BOILER / STEAM on the right. */
+/**
+ * POWER / BREWING on the left of the slanted face, BOILER / STEAM on the right.
+ * Each label is centred under its indicator light (see the LED layout in Exterior.tsx).
+ */
 export function drawPanelLabels(ctx: CanvasRenderingContext2D, w: number, h: number, f: Fonts) {
   ctx.clearRect(0, 0, w, h);
   ctx.fillStyle = INK;
   ctx.font = `500 ${Math.round(h * 0.13)}px ${f.mono}`;
   ctx.textBaseline = "middle";
-  ctx.textAlign = "left";
-  ctx.fillText("POWER", w * 0.04, h * 0.2);
-  ctx.fillText("BREWING", w * 0.04, h * 0.66);
-  ctx.textAlign = "right";
-  ctx.fillText("BOILER", w * 0.96, h * 0.2);
-  ctx.fillText("STEAM", w * 0.96, h * 0.66);
+  ctx.textAlign = "center";
+  const left = w * 0.1333, right = w * 0.8667, top = h * 0.243, bottom = h * 0.757;
+  ctx.fillText("POWER", left, top);
+  ctx.fillText("BREWING", left, bottom);
+  ctx.fillText("BOILER", right, top);
+  ctx.fillText("STEAM", right, bottom);
 }
 
 export function drawWordmark(ctx: CanvasRenderingContext2D, w: number, h: number, f: Fonts) {
