@@ -19,9 +19,6 @@ function detectMode(): Mode {
   }
 }
 
-/** Idle sway in the hero so the machine feels alive before the first scroll. */
-const IDLE_UNTIL = 0.3;
-
 /**
  * Fixed full-screen stage behind the page. Shows a still of the hero render
  * until the 3D scene has drawn its first frame; stays a still when motion is
@@ -61,12 +58,7 @@ export function Stage() {
             lambda={mobile ? 5 : 6}
             dprMax={mobile ? 1.5 : 2}
             onReady={() => setReady(true)}
-            source={(framing, aspect, t) => {
-              const p = story.get();
-              const s = sceneStateAt(p, framing, aspect);
-              if (p < IDLE_UNTIL) s.machineYaw += Math.sin((t / 8) * Math.PI * 2) * 0.06 * (1 - p / IDLE_UNTIL);
-              return s;
-            }}
+            source={(framing, aspect) => sceneStateAt(story.get(), framing, aspect)}
           />
         </div>
       )}

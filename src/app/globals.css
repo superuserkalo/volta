@@ -94,6 +94,8 @@
     background: var(--bg);
     color-scheme: dark;
     overflow-anchor: none;
+    /* lets the quote's gate marker catch the scroll; proximity leaves the rest free */
+    scroll-snap-type: y proximity;
   }
   body {
     background: var(--bg);
@@ -169,4 +171,16 @@ html[data-tone="light"] [data-progress-rail] .tone-chrome-track {
 /* Without the 3D stage (reduced motion / no WebGL), blueprint beats still get their paper */
 .no-3d [data-tone="light"] {
   background: var(--paper);
+}
+
+/* Header turns solid once the page scrolls */
+html[data-scrolled="true"] .chrome-header {
+  pointer-events: auto;
+  background: rgb(19 21 22 / 0.92);
+  border-bottom-color: var(--line);
+  backdrop-filter: blur(12px);
+}
+html[data-scrolled="true"][data-tone="light"] .chrome-header {
+  background: rgb(217 214 211 / 0.92);
+  border-bottom-color: rgb(42 44 46 / 0.15);
 }

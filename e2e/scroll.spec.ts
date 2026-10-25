@@ -69,3 +69,20 @@ test("revealed text is visible once its section is on screen", async ({ page }) 
   const h = page.locator("#control h2");
   await expect.poll(() => h.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.95);
 });
+
+test("header turns solid after scrolling", async ({ page }) => {
+  await page.goto("/");
+  const header = page.locator("header.chrome-header");
+  const bg = () => header.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(await bg()).toBe("rgba(0, 0, 0, 0)");
+  await page.mouse.wheel(0, 400);
+  await expect.poll(bg).not.toBe("rgba(0, 0, 0, 0)");
+});
+
+test("the quote has a scroll gate at its activation point", async ({ page }) => {
+  await page.goto("/");
+  const gate = page.locator("#quote [data-gate]");
+  await expect(gate).toHaveCount(1);
+  const snap = await gate.evaluate((el) => [getComputedStyle(el).scrollSnapAlign, getComputedStyle(el).scrollSnapStop]);
+  expect(snap).toEqual(["start", "always"]);
+});

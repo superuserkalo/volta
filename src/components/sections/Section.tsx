@@ -8,6 +8,8 @@ type Props = {
   align?: "left" | "right" | "center";
   className?: string;
   children: ReactNode;
+  /** Fraction of the section where the scroll snaps and stops once (the quote's door gate). */
+  gateAt?: number;
 };
 
 /**
@@ -15,7 +17,7 @@ type Props = {
  * distance; its content is pinned (sticky) for that distance while the 3D
  * stage behind it animates.
  */
-export function Section({ beat, align = "left", className, children }: Props) {
+export function Section({ beat, align = "left", className, children, gateAt }: Props) {
   const def = BEATS.find((b) => b.id === beat)!;
   return (
     <section
@@ -25,6 +27,14 @@ export function Section({ beat, align = "left", className, children }: Props) {
       style={{ minHeight: `${def.lengthVh}svh` }}
       className="relative"
     >
+      {gateAt !== undefined && (
+        <div
+          aria-hidden
+          data-gate
+          className="pointer-events-none absolute left-0 h-px w-px snap-start snap-always"
+          style={{ top: `${gateAt * 100}%` }}
+        />
+      )}
       <div className="sticky top-0 flex h-svh w-full overflow-hidden">
         <div
           data-panel
@@ -39,9 +49,10 @@ export function Section({ beat, align = "left", className, children }: Props) {
           <div
             className={cn(
               "beat-copy w-full",
-              align === "left" && "md:max-w-[34rem]",
+              align === "left" && beat !== "quote" && "md:max-w-[34rem]",
               align === "right" && "md:ml-auto md:max-w-[34rem]",
               align === "center" && "md:max-w-[46rem]",
+              beat === "quote" && "md:max-w-[40rem]",
             )}
           >
             {children}

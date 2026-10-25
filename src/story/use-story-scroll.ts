@@ -39,6 +39,7 @@ export function useStoryScroll() {
       story.set(p);
       // Header and other fixed chrome follow the paper/dark background.
       document.documentElement.dataset.tone = sceneStateAt(p, "landscape").paper > 0.5 ? "light" : "dark";
+      document.documentElement.dataset.scrolled = window.scrollY > 8 ? "true" : "false";
     };
 
     measure();

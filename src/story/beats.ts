@@ -20,9 +20,9 @@ export const BEATS: readonly { id: BeatId; lengthVh: number; tone: Tone }[] = [
   { id: "temperature", lengthVh: 200, tone: "dark" },
   { id: "control", lengthVh: 200, tone: "dark" },
   { id: "power", lengthVh: 300, tone: "dark" },
-  { id: "repair", lengthVh: 300, tone: "light" },
+  { id: "repair", lengthVh: 400, tone: "light" },
   { id: "lab", lengthVh: 200, tone: "dark" },
-  { id: "quote", lengthVh: 100, tone: "dark" },
+  { id: "quote", lengthVh: 250, tone: "dark" },
   { id: "cta", lengthVh: 100, tone: "dark" },
 ] as const;
 

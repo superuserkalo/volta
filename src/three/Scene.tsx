@@ -13,7 +13,10 @@ import { Callouts } from "./machine/Callouts";
 const DARK = new THREE.Color("#131516");
 const PAPER = new THREE.Color("#d9d6d3");
 
-const NUMERIC = ["machineYaw", "paper", "blueprint", "xray", "callouts", "explode", "trayOpen", "batteryAttach", "boilerGlow", "panelLights"] as const;
+const NUMERIC = ["machineYaw", "paper", "blueprint", "xray", "callouts", "explode", "batteryAttach", "boilerGlow", "panelLights", "presence"] as const;
+
+/** The door is an activation, not a scrub: it opens or closes over this many seconds once the gate flips. */
+const DOOR_SECONDS = 1.6;
 
 export type StateSource = (framing: Framing, aspect: number, elapsed: number) => SceneState;
 
@@ -23,7 +26,7 @@ function cloneState(s: SceneState): SceneState {
 
 /** Damps the displayed state toward the source every frame and drives camera + background. */
 function Rig({ source, lambda, stateRef }: { source: StateSource; lambda: number; stateRef: React.RefObject<SceneState> }) {
-  const { camera, scene, size } = useThree();
+  const { camera, scene, size, gl } = useThree();
   const bg = useMemo(() => new THREE.Color(), []);
   const pos = useMemo(() => new THREE.Vector3(), []);
   const tgt = useMemo(() => new THREE.Vector3(), []);
@@ -35,6 +38,10 @@ function Rig({ source, lambda, stateRef }: { source: StateSource; lambda: number
     for (const k of NUMERIC) cur[k] = damp(cur[k], target[k], lambda, dt);
     cur.battery = target.battery;
     cur.highlight = target.highlight;
+    cur.gate = target.gate;
+    const step = dt / DOOR_SECONDS;
+    cur.trayOpen = cur.trayOpen < target.trayOpen ? Math.min(target.trayOpen, cur.trayOpen + step) : Math.max(target.trayOpen, cur.trayOpen - step);
+    cur.focus = target.focus;
     const c = cur.camera;
     c.position = c.position.map((v, i) => damp(v, target.camera.position[i], lambda, dt)) as unknown as SceneState["camera"]["position"];
     c.target = c.target.map((v, i) => damp(v, target.camera.target[i], lambda, dt)) as unknown as SceneState["camera"]["target"];
@@ -49,6 +56,8 @@ function Rig({ source, lambda, stateRef }: { source: StateSource; lambda: number
     }
     bg.copy(DARK).lerp(PAPER, cur.paper);
     scene.background = bg;
+    // Leaving the stage: fade the whole canvas so the page below shows through.
+    gl.domElement.style.opacity = String(cur.presence);
   }, -1);
   return null;
 }
