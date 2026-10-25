@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BEATS } from "@/story/beats";
 import { sceneStateAt, type BatteryVariant, type Highlight, type SceneState } from "@/story/scene-state";
 
@@ -25,7 +25,9 @@ export function LabClient() {
   const [p, setP] = useState(0);
   const [override, setOverride] = useState<Partial<SceneState>>({});
   const ref = useRef({ p, override });
-  ref.current = { p, override };
+  useEffect(() => {
+    ref.current = { p, override };
+  }, [p, override]);
   const initial = sceneStateAt(0, "landscape");
 
   return (

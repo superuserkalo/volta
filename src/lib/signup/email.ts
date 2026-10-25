@@ -1,6 +1,6 @@
 import { Data, Effect, Schema } from "effect";
 
-export class InvalidEmail extends Data.TaggedError("InvalidEmail")<{}> {}
+export class InvalidEmail extends Data.TaggedError("InvalidEmail") {}
 
 /** Trimmed, case preserved, at most 254 characters, a plain `local@domain.tld` shape. */
 export const EmailSchema = Schema.Trim.pipe(

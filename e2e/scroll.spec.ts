@@ -1,7 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { beatAt } from "../src/story/position";
 
-const storyP = (page: Page) => page.evaluate(() => (window as any).__volta.story.get() as number);
+type VoltaWindow = Window & { __volta?: { story: { get(): number } } };
+
+const storyP = (page: Page) => page.evaluate(() => (window as VoltaWindow).__volta!.story.get());
 const beatNow = async (page: Page) => beatAt(await storyP(page)).id;
 
 async function scrollToBeat(page: Page, id: string, fraction: number) {
@@ -18,7 +20,7 @@ async function scrollToBeat(page: Page, id: string, fraction: number) {
 
 test("story position follows scroll", async ({ page }) => {
   await page.goto("/");
-  await page.waitForFunction(() => (window as any).__volta);
+  await page.waitForFunction(() => (window as VoltaWindow).__volta);
   await scrollToBeat(page, "power", 0.5);
   const p = await storyP(page);
   expect(p).toBeGreaterThan(5.4);
@@ -27,23 +29,23 @@ test("story position follows scroll", async ({ page }) => {
 
 test("header CTA jumps to the final section", async ({ page }) => {
   await page.goto("/");
-  await page.waitForFunction(() => (window as any).__volta);
+  await page.waitForFunction(() => (window as VoltaWindow).__volta);
   await page.locator("header a.chrome-cta").click();
   await expect.poll(() => beatNow(page), { timeout: 1500 }).toBe("cta");
 });
 
 test("reload mid-page keeps the current beat", async ({ page }) => {
   await page.goto("/");
-  await page.waitForFunction(() => (window as any).__volta);
+  await page.waitForFunction(() => (window as VoltaWindow).__volta);
   await scrollToBeat(page, "power", 0.4);
   await page.reload();
-  await page.waitForFunction(() => (window as any).__volta);
+  await page.waitForFunction(() => (window as VoltaWindow).__volta);
   await expect.poll(() => beatNow(page)).toBe("power");
 });
 
 test("resize keeps the current beat", async ({ page }) => {
   await page.goto("/");
-  await page.waitForFunction(() => (window as any).__volta);
+  await page.waitForFunction(() => (window as VoltaWindow).__volta);
   await scrollToBeat(page, "temperature", 0.5);
   const size = page.viewportSize()!;
   await page.setViewportSize({ width: size.height, height: size.width });
@@ -53,7 +55,7 @@ test("resize keeps the current beat", async ({ page }) => {
 
 test("progress rail appears in the numbered sections", async ({ page }) => {
   await page.goto("/");
-  await page.waitForFunction(() => (window as any).__volta);
+  await page.waitForFunction(() => (window as VoltaWindow).__volta);
   const rail = page.locator("[data-progress-rail]");
   await expect(rail).toHaveAttribute("data-visible", "false");
   await scrollToBeat(page, "pressure", 0.4);
@@ -62,7 +64,7 @@ test("progress rail appears in the numbered sections", async ({ page }) => {
 
 test("revealed text is visible once its section is on screen", async ({ page }) => {
   await page.goto("/");
-  await page.waitForFunction(() => (window as any).__volta);
+  await page.waitForFunction(() => (window as VoltaWindow).__volta);
   await scrollToBeat(page, "control", 0.3);
   const h = page.locator("#control h2");
   await expect.poll(() => h.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeGreaterThan(0.95);

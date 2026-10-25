@@ -34,6 +34,8 @@ export function Stage() {
 
   useEffect(() => {
     const m = detectMode();
+    // Browser-only checks (WebGL, reduced motion), so they run after hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMode(m);
     setMobile(window.innerWidth < 768);
     document.documentElement.classList.toggle("no-3d", m === "static");

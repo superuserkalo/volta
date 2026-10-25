@@ -33,7 +33,7 @@ export function PressureChart() {
         <g fill="#5F6367" fontFamily={mono} fontSize={17}>
           {TIME_TICKS.map((k) => <text key={k.x} x={k.x} y={548} textAnchor={k.anchor}>{k.label}</text>)}
         </g>
-        {CURVES.map((c, i) => (
+        {CURVES.map((c) => (
           <path
             key={c.key}
             d={c.d}
