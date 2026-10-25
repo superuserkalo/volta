@@ -8,6 +8,8 @@ type Props = {
   align?: "left" | "right" | "center";
   className?: string;
   children: ReactNode;
+  /** vh into the section where the scroll comes to rest once (the quote's door gate). */
+  stopsVh?: readonly number[];
 };
 
 /**
@@ -15,7 +17,7 @@ type Props = {
  * distance; its content is pinned (sticky) for that distance while the 3D
  * stage behind it animates.
  */
-export function Section({ beat, align = "left", className, children }: Props) {
+export function Section({ beat, align = "left", className, children, stopsVh = [] }: Props) {
   const def = BEATS.find((b) => b.id === beat)!;
   return (
     <section
@@ -25,6 +27,15 @@ export function Section({ beat, align = "left", className, children }: Props) {
       style={{ minHeight: `${def.lengthVh}svh` }}
       className="relative"
     >
+      {stopsVh.map((vh) => (
+        <div
+          key={vh}
+          aria-hidden
+          data-gate
+          className="pointer-events-none absolute left-0 h-px w-px snap-start snap-always"
+          style={{ top: `${vh}svh` }}
+        />
+      ))}
       <div className="sticky top-0 flex h-svh w-full overflow-hidden">
         <div
           data-panel

@@ -94,6 +94,8 @@
     background: var(--bg);
     color-scheme: dark;
     overflow-anchor: none;
+    /* only the quote's gate marker snaps; proximity leaves the rest of the page free */
+    scroll-snap-type: y proximity;
   }
   body {
     background: var(--bg);

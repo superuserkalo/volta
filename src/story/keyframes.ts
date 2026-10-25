@@ -64,6 +64,9 @@ export const POWER_HOLDS = [115, 172, 228, 280].map((vh) => storyAt("power", vh)
 // - Camera moves take 50–90vh and glide through chained keyframes; a repeated value is a hold.
 // - paper / blueprint / callouts / battery switch at a point and then play over a fixed time
 //   (see Scene's Rig), so stopping the scroll never leaves them half done.
+/** Where the quote's door opens, vh into the quote. The page has a soft stop just past it (Quote.tsx). */
+export const QUOTE_GATE_VH = 45;
+
 export const KEYFRAMES = build([
   // hero — their render's 3/4 view, right of the headline; it starts turning on the first scroll
   ["hero", 0, {}],
@@ -122,7 +125,7 @@ export const KEYFRAMES = build([
   // quote — the door opens as a timed activation; then the machine rides up
   // and off the screen with the quote (same speed as the page) and fades as it goes
   ["quote", 0, { machineYaw: -0.6, shot: { focus: [0, 0.42, 0.12], elev: 0.2, fit: 0.72 } }],
-  ["quote", 45, { gate: true }],
+  ["quote", QUOTE_GATE_VH, { gate: true }],
   ["quote", 120, {}],
   ["quote", 170, { shot: { lift: 0.5 } }, "linear"],
   ["quote", 220, { presence: 0, shot: { lift: 1 } }, "linear"],

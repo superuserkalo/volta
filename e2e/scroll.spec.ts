@@ -89,10 +89,14 @@ test("reloading at the bottom never flashes the hero machine", async ({ page }) 
   expect(await poster.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeLessThan(0.05);
 });
 
-test("nothing snaps or pulls the scroll", async ({ page }) => {
+test("only the quote's door gate catches the scroll", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("[data-gate]")).toHaveCount(0);
-  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollSnapType)).toBe("none");
+  await expect(page.locator("[data-gate]")).toHaveCount(1);
+  const gate = page.locator("#quote [data-gate]");
+  await expect(gate).toHaveCount(1);
+  const snap = await gate.evaluate((el) => [getComputedStyle(el).scrollSnapAlign, getComputedStyle(el).scrollSnapStop]);
+  expect(snap).toEqual(["start", "always"]);
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollSnapType)).toBe("y"); // proximity is the default, so Chromium reports just "y"
 });
 
 test("resizing and back returns to the same spot", async ({ page }) => {
