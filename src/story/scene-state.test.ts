@@ -1,18 +1,15 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { BEATS } from "./beats";
+import { BEATS, storyAt } from "./beats";
 import { POWER_HOLDS } from "./keyframes";
 import { sceneStateAt, type Framing, type SceneState } from "./scene-state";
 
-// trayOpen is not here: the door is a timed activation (see `gate`), not scrubbed.
+// Scrubbed values only. Not here: trayOpen, paper, blueprint, callouts and batteryAttach are
+// switched at a point and played over time by the stage.
 const numeric = (s: SceneState) => ({
   machineYaw: s.machineYaw,
-  paper: s.paper,
-  blueprint: s.blueprint,
   xray: s.xray,
-  callouts: s.callouts,
   explode: s.explode,
-  batteryAttach: s.batteryAttach,
   boilerGlow: s.boilerGlow,
   panelLights: s.panelLights / 4,
   presence: s.presence,
@@ -38,13 +35,20 @@ describe("sceneStateAt", () => {
     expect(s.battery).toBe("b-mount");
   });
   it("specs: blueprint with callouts", () => {
-    const s = at(1.42);
-    expect(s.paper).toBeCloseTo(1);
-    expect(s.blueprint).toBeCloseTo(1);
-    expect(s.callouts).toBeCloseTo(1);
+    const s = at(storyAt("specs", 80));
+    expect(s.paper).toBe(1);
+    expect(s.blueprint).toBe(1);
+    expect(s.callouts).toBe(1);
   });
-  it("paper is gone before the pressure copy (light text) scrolls in", () => {
-    expect(at(1.76).paper).toBeCloseTo(0);
+  it("paper is gone before the pressure copy (light text) shows", () => {
+    expect(at(storyAt("specs", 160)).paper).toBe(0);
+  });
+  it("paper, blueprint and callouts are switches, never a half-way look", () => {
+    for (let p = 0; p <= BEATS.length; p += 0.005) {
+      const s = at(p);
+      for (const v of [s.paper, s.blueprint, s.callouts]) expect([0, 1]).toContain(v);
+      expect(s.batteryAttach).toBe(1);
+    }
   });
   it("pressure: x-ray on the pump", () => {
     const s = at(2.5);
@@ -56,48 +60,55 @@ describe("sceneStateAt", () => {
     expect(s.highlight).toBe("boiler");
     expect(s.boilerGlow).toBeCloseTo(1);
   });
-  it("control: all four panel lights", () => {
-    expect(at(4.7).panelLights).toBeCloseTo(4);
-    expect(at(4.8).highlight).toBe("modular-port");
+  it("control: all four panel lights, while the control copy is pinned", () => {
+    expect(at(storyAt("control", 100)).panelLights).toBeCloseTo(4);
+    expect(at(storyAt("control", 130)).highlight).toBe("modular-port");
+    expect(at(storyAt("control", 150)).highlight).toBe(null);
   });
-  it("control → power: the battery stays seated while the machine turns to its back", () => {
-    for (let p = 4.84; p <= 5.27; p += 0.01) {
-      expect(at(p).batteryAttach, `p=${p.toFixed(2)}`).toBeCloseTo(1);
-      expect(at(p).battery).toBe("b-mount");
+  it("control → power: the B-mount stays on while the machine turns to its back", () => {
+    for (let p = storyAt("control", 150); p <= POWER_HOLDS[0]; p += 0.01) {
+      expect(at(p).battery, `p=${p.toFixed(2)}`).toBe("b-mount");
     }
+    expect(at(POWER_HOLDS[0]).machineYaw).toBeCloseTo(2.45);
   });
-  it("power: each pack is seated and held at its stop, in order, while the copy is pinned", () => {
+  it("power: each pack has its own stretch, in order, while the copy is pinned", () => {
     const order = ["b-mount", "v-mount", "a-mount", "power-tool"];
-    POWER_HOLDS.forEach((stop, i) => {
-      // pinned power copy: until 100vh before the end of the 600vh beat
-      expect(stop).toBeLessThan(5.83);
-      for (const d of [-0.02, 0, 0.02]) {
-        expect(at(stop + d).battery).toBe(order[i]);
-        expect(at(stop + d).batteryAttach).toBeCloseTo(1);
-      }
+    const pinnedUntil = storyAt("power", BEATS.find((b) => b.id === "power")!.lengthVh - 100);
+    POWER_HOLDS.forEach((mid, i) => {
+      expect(mid).toBeLessThan(pinnedUntil);
+      for (const dvh of [-25, 0, 25]) expect(at(mid + dvh / 400).battery).toBe(order[i]);
     });
   });
-  it("repair: explodes, reassembles, and leaves the paper before the lab copy", () => {
-    expect(at(6.45).explode).toBeGreaterThanOrEqual(0.95);
-    expect(at(6.72).explode).toBeCloseTo(0);
-    expect(at(6.8).paper).toBeCloseTo(0);
+  it("repair: blueprint, explodes, reassembles, and leaves the paper before the lab copy", () => {
+    expect(at(storyAt("repair", 0)).paper).toBe(1);
+    expect(at(storyAt("repair", 110)).explode).toBeGreaterThanOrEqual(0.95);
+    expect(at(storyAt("repair", 185)).explode).toBeCloseTo(0);
+    expect(at(storyAt("repair", 220)).paper).toBe(0);
   });
   it("quote: the door is a gate that opens at the activation point", () => {
-    expect(at(7.7).gate).toBe(false);
-    expect(at(8.25).gate).toBe(false);
-    expect(at(8.32).gate).toBe(true);
-    expect(at(8.5).gate).toBe(true);
-    expect(at(8.5).trayOpen).toBe(1);
+    expect(at(storyAt("lab", 150)).gate).toBe(false);
+    expect(at(storyAt("quote", 40)).gate).toBe(false);
+    expect(at(storyAt("quote", 50)).gate).toBe(true);
+    expect(at(storyAt("quote", 100)).gate).toBe(true);
+    expect(at(storyAt("quote", 100)).trayOpen).toBe(1);
   });
   it("the machine rides up and out with the quote and stays gone for the CTA", () => {
-    expect(at(8.4).presence).toBe(1);
-    // the quote copy scrolls out over 8.6 … 9.0 (100vh); the machine rises at the same rate
-    for (const p of [8.7, 8.8, 8.9]) {
-      expect(at(p).camera.target[1]).toBeLessThan(at(p - 0.05).camera.target[1]);
+    const q = (vh: number) => storyAt("quote", vh);
+    expect(at(q(110)).presence).toBe(1);
+    // the quote copy scrolls out over its last 100vh; the machine rises at the same rate
+    for (const vh of [140, 170, 200]) {
+      expect(at(q(vh)).camera.target[1]).toBeLessThan(at(q(vh - 10)).camera.target[1]);
     }
-    expect(at(8.8).presence).toBe(1);
-    expect(at(9.0).presence).toBeCloseTo(0);
-    expect(at(9.5).presence).toBeCloseTo(0);
+    expect(at(q(170)).presence).toBe(1);
+    expect(at(q(220)).presence).toBeCloseTo(0);
+    expect(at(storyAt("cta", 50)).presence).toBeCloseTo(0);
+  });
+  it("beats are sized to what happens in them", () => {
+    // no beat leaves the copy pinned for more than 3 screens, and nothing is shorter than a screen
+    for (const b of BEATS) {
+      expect(b.lengthVh - 100, b.id).toBeLessThanOrEqual(300);
+      expect(b.lengthVh, b.id).toBeGreaterThanOrEqual(100);
+    }
   });
   it("starts moving on the very first scroll", () => {
     expect(Math.abs(at(0.02).machineYaw - at(0).machineYaw)).toBeGreaterThan(0.005);
@@ -127,7 +138,8 @@ describe("sceneStateAt", () => {
   it("on a laptop the machine stays right of the text column while copy is on the left", () => {
     // beats whose copy sits in the left column, sampled while that copy is on screen
     const leftCopy: [number, number][] = [
-      [0, 0.6], [1.75, 2.5], [2.5, 3.5], [3.5, 4.5], [4.5, 5.8], [5.8, 6.75], [6.75, 7.5], [7.5, 8.6],
+      [0, storyAt("hero", 60)],
+      [storyAt("specs", 205), storyAt("quote", 120)],
     ];
     for (const [a, b] of leftCopy) {
       for (let p = a; p <= b; p += 0.02) {
@@ -140,7 +152,7 @@ describe("sceneStateAt", () => {
 
   it("the exploded machine fits on screen", () => {
     for (const [framing, aspect] of [["landscape", 1.6], ["portrait", 390 / 844]] as const) {
-      const s = sceneStateAt(6.45, framing, aspect);
+      const s = sceneStateAt(storyAt("repair", 110), framing, aspect);
       for (const corner of [[-0.95, 0, 0], [0.95, 0, 0], [0, 1.5, 0], [0, -0.1, 0]] as const) {
         const p = ndc(s, [s.focus[0] + corner[0], s.focus[1] + corner[1] - 0.5, s.focus[2] + corner[2]], aspect);
         expect(Math.abs(p.x), `${framing} x`).toBeLessThanOrEqual(1);

@@ -13,10 +13,19 @@ import { Callouts } from "./machine/Callouts";
 const DARK = new THREE.Color("#131516");
 const PAPER = new THREE.Color("#d9d6d3");
 
-const NUMERIC = ["machineYaw", "paper", "blueprint", "xray", "callouts", "explode", "boilerGlow", "panelLights", "presence"] as const;
+const NUMERIC = ["machineYaw", "xray", "explode", "boilerGlow", "panelLights", "presence"] as const;
+
+/**
+ * Switched at a point on the scroll, then played over time (how fast each settles; ~0.45 s at 7).
+ * A stop mid-scroll lands on one look or the other, never a grey half-paper.
+ */
+const TIMED = { paper: 7, blueprint: 7, callouts: 3.5 } as const;
 
 /** The door is an activation, not a scrub: it opens or closes over this many seconds once the gate flips. */
 const DOOR_SECONDS = 1.6;
+/** A pack swap is an activation too: the old pack comes off, then the new one slides into the lock. */
+const PACK_OFF_SECONDS = 0.35;
+const PACK_ON_SECONDS = 0.5;
 
 export type StateSource = (framing: Framing, aspect: number, elapsed: number) => SceneState;
 
@@ -53,12 +62,21 @@ function Rig({
     const isCut = cut?.() ?? false;
     const lambda = isCut ? 1e6 : baseLambda;
     for (const k of NUMERIC) cur[k] = damp(cur[k], target[k], lambda, dt);
-    // A pack is only swapped once the one on screen is fully off, so a fast scroll never pops it.
-    // Packs follow the scroll tighter than the camera so they land with a firm stop, not a drift.
-    if (isCut) cur.battery = target.battery;
-    const swapping = cur.battery !== target.battery;
-    cur.batteryAttach = damp(cur.batteryAttach, swapping ? 0 : target.batteryAttach, lambda * 2.2, dt);
-    if (swapping && cur.batteryAttach < 0.02) cur.battery = target.battery;
+    for (const [k, rate] of Object.entries(TIMED) as [keyof typeof TIMED, number][]) {
+      cur[k] = damp(cur[k], target[k], isCut ? Infinity : rate, dt);
+    }
+    // A pack is only swapped once the one on screen is fully off, so a fast scroll never pops it
+    // (flying past several packs swaps once, straight to the last one).
+    if (isCut) {
+      cur.battery = target.battery;
+      cur.batteryAttach = target.batteryAttach;
+    } else if (cur.battery !== target.battery) {
+      cur.batteryAttach = Math.max(0, cur.batteryAttach - dt / PACK_OFF_SECONDS);
+      if (cur.batteryAttach === 0) cur.battery = target.battery;
+    } else {
+      const d = target.batteryAttach - cur.batteryAttach;
+      cur.batteryAttach += Math.sign(d) * Math.min(Math.abs(d), dt / PACK_ON_SECONDS);
+    }
     cur.highlight = target.highlight;
     cur.gate = target.gate;
     const step = isCut ? 1 : dt / DOOR_SECONDS;

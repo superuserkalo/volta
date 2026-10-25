@@ -24,17 +24,30 @@ export function useStoryScroll() {
       measuredFor = layoutKey();
     };
 
-    // When the layout changes (rotation, resize, late fonts) keep the story
-    // where it was instead of keeping the raw pixel offset.
+    // When the sections change size (rotation, resize, late fonts) keep the story
+    // where it is instead of keeping the raw pixel offset. The position comes from
+    // the current scroll on the old layout (not the last stored one, which may be a
+    // frame behind mid-scroll), and the page only moves if the sections did — a phone's
+    // address bar showing or hiding changes the window, not the sections (svh), so
+    // a flick is never pulled back.
     const relayout = () => {
-      const p = story.get();
+      const p = positionFromScroll(window.scrollY, tops, heights);
+      const before = tops.join() + "|" + heights.join();
       measure();
+      if (tops.join() + "|" + heights.join() === before) return;
       const y = scrollFromPosition(p, tops, heights);
-      if (Math.abs(y - window.scrollY) > 1) window.scrollTo(0, y);
+      if (Math.abs(y - window.scrollY) > 1) {
+        lastY = y;
+        window.scrollTo(0, y);
+      }
     };
 
+    let lastY = window.scrollY;
     const update = () => {
       if (layoutKey() !== measuredFor) relayout();
+      // More than ~1.5 screens between two scroll events is a jump, not a scroll.
+      if (Math.abs(window.scrollY - lastY) > window.innerHeight * 1.5) story.markJump();
+      lastY = window.scrollY;
       const p = positionFromScroll(window.scrollY, tops, heights);
       story.set(p);
       // Header and other fixed chrome follow the paper/dark background.
@@ -47,7 +60,6 @@ export function useStoryScroll() {
     const ro = new ResizeObserver(update);
     ro.observe(document.body);
     window.addEventListener("scroll", update, { passive: true });
-
 
     if (process.env.NODE_ENV !== "production") {
       (window as unknown as { __volta: unknown }).__volta = { story };

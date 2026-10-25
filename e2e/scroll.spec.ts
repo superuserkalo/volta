@@ -89,15 +89,22 @@ test("reloading at the bottom never flashes the hero machine", async ({ page }) 
   expect(await poster.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeLessThan(0.05);
 });
 
-test("the battery section has no scroll snap stops", async ({ page }) => {
+test("nothing snaps or pulls the scroll", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("#power [data-gate]")).toHaveCount(0);
+  await expect(page.locator("[data-gate]")).toHaveCount(0);
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollSnapType)).toBe("none");
 });
 
-test("the quote has a scroll gate at its activation point", async ({ page }) => {
+test("resizing and back returns to the same spot", async ({ page }) => {
+  // the story position is kept through a layout change, so a round trip lands where it started
   await page.goto("/");
-  const gate = page.locator("#quote [data-gate]");
-  await expect(gate).toHaveCount(1);
-  const snap = await gate.evaluate((el) => [getComputedStyle(el).scrollSnapAlign, getComputedStyle(el).scrollSnapStop]);
-  expect(snap).toEqual(["start", "always"]);
+  await page.waitForFunction(() => (window as VoltaWindow).__volta);
+  await scrollToBeat(page, "power", 0.3);
+  const y = await page.evaluate(() => window.scrollY);
+  const size = page.viewportSize()!;
+  await page.setViewportSize({ width: size.width, height: size.height + 1 });
+  await page.waitForTimeout(200);
+  await page.setViewportSize(size);
+  await page.waitForTimeout(200);
+  expect(Math.abs((await page.evaluate(() => window.scrollY)) - y)).toBeLessThan(2);
 });

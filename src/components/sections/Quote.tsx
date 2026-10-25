@@ -5,7 +5,7 @@ import { Section } from "./Section";
 export function Quote() {
   const c = copy.quote;
   return (
-    <Section beat="quote" stops={[0.31]}>
+    <Section beat="quote">
       <div>
         <Image src="/brand/logo-bean.svg" alt="" width={32} height={32} className="mb-5 size-7 rotate-[8deg] md:mb-8 md:size-8" data-reveal />
         <blockquote data-reveal className="text-[1.05rem] leading-[1.45] text-text md:text-[1.75rem] md:leading-[1.4]">

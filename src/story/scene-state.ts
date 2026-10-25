@@ -42,7 +42,7 @@ export interface SceneState {
   gate: boolean;
   /** Machine rotation about its vertical axis, radians. 0 = front faces the camera. */
   machineYaw: number;
-  /** 0 dark stage … 1 blueprint paper background. */
+  /** 0 dark stage … 1 blueprint paper background. Switched by the scroll, played over time by the stage. */
   paper: number;
   /** 0 shaded … 1 hidden-line drawing. */
   blueprint: number;
@@ -53,7 +53,7 @@ export interface SceneState {
   explode: number;
   /** 0 front door closed … 1 folded down into the cup tray. sceneStateAt returns the target (gate ? 1 : 0); the stage animates it over time. */
   trayOpen: number;
-  /** 0 battery pulled away from the back … 1 seated on the mount. */
+  /** 0 battery pulled away from the back … 1 seated on the mount. sceneStateAt returns 1; the stage swaps packs over time. */
   batteryAttach: number;
   battery: BatteryVariant;
   highlight: Highlight;
@@ -75,7 +75,10 @@ const EASES: Record<Exclude<Ease, "curve">, (k: number) => number> = {
 
 type Flat = Omit<SceneState, "camera" | "focus" | "trayOpen"> & { shot: Shot };
 
-// Every number a keyframe can animate, read and written by index.
+// Every number the scroll scrubs, read and written by index. Not here, so they switch at
+// their keyframe like the discrete fields (the stage then plays them over a fixed time):
+// paper, blueprint, callouts — a half-way value is a muddy in-between nobody should stop on —
+// and batteryAttach, which stays 1 here (the stage takes a pack off and on when `battery` changes).
 const CHANNELS: { get: (f: Flat) => number; set: (f: Flat, v: number) => void }[] = [
   ...[0, 1, 2].map((i) => ({
     get: (f: Flat) => f.shot.focus[i],
@@ -90,7 +93,7 @@ const CHANNELS: { get: (f: Flat) => number; set: (f: Flat, v: number) => void }[
     set: (f: Flat, v: number) => void (f.shot[k] = v),
   })),
   ...(
-    ["machineYaw", "paper", "blueprint", "xray", "callouts", "explode", "presence", "batteryAttach", "boilerGlow", "panelLights"] as const
+    ["machineYaw", "xray", "explode", "presence", "boilerGlow", "panelLights"] as const
   ).map((k) => ({
     get: (f: Flat) => f[k],
     set: (f: Flat, v: number) => void (f[k] = v),

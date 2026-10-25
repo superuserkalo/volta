@@ -18,14 +18,14 @@ type Mode = "pending" | "3d" | "static";
  * own. A jump (reload restoring the scroll, an anchor link) is taken at once and
  * the stage cuts to the new shot instead of flying the machine across the page.
  */
-const follow = { p: 0, raw: -1, t: -1, cut: true };
+const follow = { p: 0, jumps: -1, t: -1, cut: true };
 function followed(lambda: number): StateSource {
   return (framing, aspect, elapsed) => {
     const raw = story.get();
     const dt = follow.t < 0 ? 0 : Math.min(0.1, Math.max(0, elapsed - follow.t));
     follow.t = elapsed;
-    follow.cut = follow.raw < 0 || Math.abs(raw - follow.raw) > 0.5;
-    follow.raw = raw;
+    follow.cut = follow.jumps !== story.jumps();
+    follow.jumps = story.jumps();
     follow.p = follow.cut ? raw : damp(follow.p, raw, lambda, dt);
     return sceneStateAt(follow.p, framing, aspect);
   };
@@ -86,7 +86,8 @@ export function Stage() {
             lambda={Infinity}
             dprMax={mobile ? 1.5 : 2}
             onReady={() => setReady(true)}
-            source={followed(mobile ? 5 : 6)}
+            // tight enough to feel attached to the scroll (~0.1 s), loose enough to hide a mouse wheel's steps
+            source={followed(mobile ? 12 : 10)}
             cut={jumped}
           />
         </div>
