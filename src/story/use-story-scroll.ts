@@ -3,8 +3,9 @@
 import { animate, onScroll, stagger, utils } from "animejs";
 import { useEffect } from "react";
 import { BEATS } from "./beats";
+import { isPhone } from "./phone";
 import { positionFromScroll, scrollFromPosition } from "./position";
-import { sceneStateAt } from "./scene-state";
+import { phoneToneAt, sceneStateAt } from "./scene-state";
 import { story } from "./store";
 
 const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -42,6 +43,9 @@ export function useStoryScroll() {
       }
     };
 
+    // the phone's machine window (see three/Stage.tsx)
+    const windowPx = () => document.querySelector<HTMLElement>(".stage-shield")?.offsetHeight ?? 0;
+
     let lastY = window.scrollY;
     const update = () => {
       if (layoutKey() !== measuredFor) relayout();
@@ -50,8 +54,18 @@ export function useStoryScroll() {
       lastY = window.scrollY;
       const p = positionFromScroll(window.scrollY, tops, heights);
       story.set(p);
-      // Header and other fixed chrome follow the paper/dark background.
-      document.documentElement.dataset.tone = sceneStateAt(p, "landscape").paper > 0.5 ? "light" : "dark";
+      // Header and other fixed chrome follow the paper/dark background. On a phone without
+      // the 3D stage the header sits over the dark still, so it stays light on dark.
+      const root = document.documentElement;
+      const phone = isPhone(window.innerWidth);
+      const paper = !phone
+        ? sceneStateAt(p, "landscape").paper
+        : root.classList.contains("no-3d")
+          ? 0
+          : phoneToneAt(p, heights.map((h) => windowPx() / Math.max(1, h))) === "light"
+            ? 1
+            : 0;
+      root.dataset.tone = paper > 0.5 ? "light" : "dark";
       document.documentElement.dataset.scrolled = window.scrollY > 8 ? "true" : "false";
     };
 
@@ -59,6 +73,15 @@ export function useStoryScroll() {
     update();
     const ro = new ResizeObserver(update);
     ro.observe(document.body);
+
+    // Phone layout: each copy block's height, so the CSS can pin it with its end on screen.
+    const copies = new ResizeObserver((entries) => {
+      for (const e of entries) {
+        const el = e.target as HTMLElement;
+        el.style.setProperty("--copy-h", `${el.offsetHeight}px`);
+      }
+    });
+    document.querySelectorAll<HTMLElement>(".beat-copy").forEach((el) => copies.observe(el));
     window.addEventListener("scroll", update, { passive: true });
 
     if (process.env.NODE_ENV !== "production") {
@@ -88,6 +111,7 @@ export function useStoryScroll() {
 
     return () => {
       ro.disconnect();
+      copies.disconnect();
       window.removeEventListener("scroll", update);
       observers.forEach((o) => o.revert());
     };

@@ -140,18 +140,40 @@
   color: rgb(42 44 46 / 0.58);
 }
 
-/* Mobile: text panels sit over the 3D stage on a fade so they stay readable */
+/* Phone layout (story/phone.ts): the machine has a window across the top of the
+   screen and the copy scrolls up underneath it, like content under a sticky header. */
+:root {
+  --stage-window: 54svh;
+}
 @media (max-width: 767px) {
-  .beat-panel::before {
-    content: "";
-    position: absolute;
-    inset: 38% 0 0 0;
-    z-index: -1;
-    background: linear-gradient(to bottom, transparent, var(--bg) 26%);
-    pointer-events: none;
+  /* The page takes the stage's colour (dark or blueprint paper), so the window has no visible edge */
+  body {
+    background: var(--stage-bg, var(--bg));
   }
-  [data-tone="light"] .beat-panel::before {
-    background: linear-gradient(to bottom, transparent, var(--paper) 26%);
+  /* Above the copy and cut off at the window's edge, so copy slides under it like under a
+     sticky header. The machine fades into the background just above the edge (.stage-edge),
+     so a close-up never ends in a hard line and the copy never shows through the machine. */
+  [data-stage] {
+    z-index: 20;
+    clip-path: inset(0 0 calc(100% - var(--stage-window)) 0);
+  }
+  /* Copy that fits stays right below the window; longer copy scrolls until its end is
+     on screen and stays there. --copy-h is kept up to date by the scroll driver. */
+  .beat-copy {
+    position: sticky;
+    top: min(var(--stage-window), calc(100svh - var(--copy-h, 0px) - 2.5rem));
+  }
+  /* The machine has left by the final CTA: its copy has the whole screen */
+  [data-beat="cta"] .beat-panel {
+    padding-top: 0;
+    justify-content: center;
+  }
+  [data-beat="cta"] .beat-copy {
+    top: max(4.5rem, calc((100svh - var(--copy-h, 0px)) / 2));
+  }
+  /* Without the 3D stage there is only the still in the window: light beats keep their paper */
+  .no-3d body {
+    background: var(--bg);
   }
 }
 
@@ -202,4 +224,15 @@ html[data-scrolled="true"] .chrome-header {
 html[data-scrolled="true"][data-tone="light"] .chrome-header {
   background: rgb(217 214 211 / 0.92);
   border-bottom-color: rgb(42 44 46 / 0.15);
+}
+
+/* Once the machine has left (the CTA), the window no longer catches taps or shades the copy */
+html[data-stage-present="false"] .stage-shield {
+  pointer-events: none;
+}
+.stage-edge {
+  transition: opacity 0.4s;
+}
+html[data-stage-present="false"] .stage-edge {
+  opacity: 0;
 }

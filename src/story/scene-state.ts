@@ -1,4 +1,6 @@
+import { BEATS } from "./beats";
 import { KEYFRAMES, type Shot } from "./keyframes";
+import { PHONE_WINDOW_VH } from "./phone";
 import type { StoryPosition } from "./position";
 
 export type Vec3 = readonly [number, number, number];
@@ -148,22 +150,37 @@ function between(i: number, p: number): Flat {
   return out;
 }
 
+/** The phone layout as measured on the page. */
+export interface Zone {
+  /** Free part of the screen for the machine, as fractions of the screen height (0 = top). */
+  top: number;
+  bottom: number;
+  /** Per beat: the machine window's height as a share of the section's height (sections grow when their copy needs it). */
+  windowShare?: readonly number[];
+}
+
+const NOMINAL_SHARE = BEATS.map((b) => PHONE_WINDOW_VH / b.lengthVh);
+
+/** Below the header, above the bottom edge of the machine window (see phone.ts). */
+export const PHONE_ZONE: Zone = { top: 0.09, bottom: PHONE_WINDOW_VH / 100 - 0.05 };
+
 /**
  * Frames a shot so the subject (a sphere of radius `fit` around `focus`)
  * sits inside the free part of the screen: the right or left half next to the
- * text column on a laptop (`side` +1 / -1, 0 = centered), the upper half above
- * the text panel on a phone. Distance follows from the fit, so nothing that
- * fits ever reaches the copy or leaves the viewport.
+ * text column on a laptop (`side` +1 / -1, 0 = centered), the machine window
+ * at the top of a phone (`zone`). Distance follows from the fit, so nothing
+ * that fits ever reaches the copy or leaves the viewport.
  */
-function toCamera(shot: Shot, framing: Framing, aspect: number): SceneState["camera"] {
+function toCamera(shot: Shot, framing: Framing, aspect: number, zone: Zone): SceneState["camera"] {
   const t = Math.tan((shot.fov * Math.PI) / 360);
   let zoneHalfX: number, zoneHalfY: number, cx: number, cy: number;
   if (framing === "portrait") {
-    // top third of a phone, between the header and the text panel
-    zoneHalfX = 0.9;
-    zoneHalfY = 0.33;
+    const yTop = 1 - 2 * zone.top;
+    const yBottom = 1 - 2 * zone.bottom;
+    zoneHalfX = 0.92;
+    zoneHalfY = (yTop - yBottom) / 2;
     cx = 0;
-    cy = 0.57;
+    cy = (yTop + yBottom) / 2;
   } else {
     const k = Math.min(1, Math.abs(shot.side));
     zoneHalfX = mix(0.9, 0.42, k);
@@ -171,8 +188,11 @@ function toCamera(shot: Shot, framing: Framing, aspect: number): SceneState["cam
     cx = shot.side * 0.52;
     cy = 0;
   }
-  // phones show close-ups a little wider so the subject never crowds the header or the copy
-  const fit = framing === "portrait" ? Math.max(shot.fit, 0.55) : shot.fit;
+  // Phones frame the machine a little tighter (the window is small, it should fill it); wide
+  // shots (blueprint, exploded) keep their margin for the labels around them. Close-ups
+  // stay a little wider, so a detail still reads as part of the machine.
+  const tighten = mix(0.92, 1, Math.min(1, Math.max(0, (shot.fit - 0.75) / 0.2)));
+  const fit = framing === "portrait" ? Math.max(shot.fit * tighten, 0.48) : shot.fit;
   const halfH = Math.max(fit / (zoneHalfX * aspect), fit / zoneHalfY);
   const dist = halfH / t + fit * 0.6;
   const atFocus = t * dist; // half-height of the view at the subject
@@ -184,8 +204,25 @@ function toCamera(shot: Shot, framing: Framing, aspect: number): SceneState["cam
   return { position, target, fov: shot.fov };
 }
 
+/**
+ * On a phone the stage takes the tone of the copy below the machine window. It
+ * flips at the moment that area is empty: the last copy has just gone under the
+ * window and the next one has not come in yet (the copy starts a window below its
+ * section's top, so that is when a section's end reaches the window's edge).
+ */
+export function phoneToneAt(p: StoryPosition, windowShare: readonly number[] = NOMINAL_SHARE): "dark" | "light" {
+  const i = Math.max(0, Math.min(BEATS.length - 1, Math.floor(p)));
+  const q = p + (windowShare[i] ?? NOMINAL_SHARE[i]);
+  return BEATS[Math.max(0, Math.min(BEATS.length - 1, Math.floor(q)))].tone;
+}
+
 /** `aspect` = viewport width / height; defaults to a typical laptop or phone for the framing. */
-export function sceneStateAt(p: StoryPosition, framing: Framing, aspect = framing === "portrait" ? 390 / 844 : 1.6): SceneState {
+export function sceneStateAt(
+  p: StoryPosition,
+  framing: Framing,
+  aspect = framing === "portrait" ? 390 / 844 : 1.6,
+  zone: Zone = PHONE_ZONE,
+): SceneState {
   const last = KEYFRAMES.length - 1;
   let flat: Flat;
   if (p <= KEYFRAMES[0].at) flat = KEYFRAMES[0].state;
@@ -196,5 +233,11 @@ export function sceneStateAt(p: StoryPosition, framing: Framing, aspect = framin
     flat = between(i, p);
   }
   const { shot, ...rest } = flat;
-  return { ...rest, focus: shot.focus, trayOpen: rest.gate ? 1 : 0, camera: toCamera(shot, framing, aspect) };
+  if (framing === "portrait") {
+    // the blueprint look always comes with the paper (as in the keyframes), on the phone's timing
+    const light = phoneToneAt(p, zone.windowShare) === "light" ? 1 : 0;
+    rest.paper = light;
+    rest.blueprint = light;
+  }
+  return { ...rest, focus: shot.focus, trayOpen: rest.gate ? 1 : 0, camera: toCamera(shot, framing, aspect, zone) };
 }

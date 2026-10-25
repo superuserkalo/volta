@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { BEATS, storyAt } from "./beats";
 import { POWER_HOLDS } from "./keyframes";
-import { sceneStateAt, type Framing, type SceneState } from "./scene-state";
+import { PHONE_WINDOW_VH } from "./phone";
+import { PHONE_ZONE, phoneToneAt, sceneStateAt, type Framing, type SceneState } from "./scene-state";
 
 // Scrubbed values only. Not here: trayOpen, paper, blueprint, callouts and batteryAttach are
 // switched at a point and played over time by the stage.
@@ -150,15 +151,39 @@ describe("sceneStateAt", () => {
     }
   });
 
-  it("the exploded machine fits on screen", () => {
-    for (const [framing, aspect] of [["landscape", 1.6], ["portrait", 390 / 844]] as const) {
+  it("the exploded machine fits on screen (a phone: inside the machine window)", () => {
+    for (const [framing, aspect] of [["landscape", 1.6], ["portrait", 390 / 664], ["portrait", 390 / 844]] as const) {
       const s = sceneStateAt(storyAt("repair", 110), framing, aspect);
+      const [yLo, yHi] = framing === "portrait" ? [1 - 2 * PHONE_ZONE.bottom, 1 - 2 * PHONE_ZONE.top] : [-1, 1];
       for (const corner of [[-0.95, 0, 0], [0.95, 0, 0], [0, 1.5, 0], [0, -0.1, 0]] as const) {
         const p = ndc(s, [s.focus[0] + corner[0], s.focus[1] + corner[1] - 0.5, s.focus[2] + corner[2]], aspect);
         expect(Math.abs(p.x), `${framing} x`).toBeLessThanOrEqual(1);
-        expect(Math.abs(p.y), `${framing} y`).toBeLessThanOrEqual(1);
+        expect(p.y, `${framing} y`).toBeGreaterThanOrEqual(yLo - 0.02);
+        expect(p.y, `${framing} y`).toBeLessThanOrEqual(yHi + 0.02);
       }
     }
+  });
+
+  it("on a phone the machine stays in the window above the copy", () => {
+    for (let p = 0; p <= storyAt("quote", 110); p += 0.02) {
+      const s = sceneStateAt(p, "portrait", 390 / 664);
+      const y = ndc(s, s.focus, 390 / 664).y;
+      expect(y, `focus y at p=${p.toFixed(2)}`).toBeGreaterThan(1 - 2 * PHONE_ZONE.bottom);
+      expect(y, `focus y at p=${p.toFixed(2)}`).toBeLessThan(1 - 2 * PHONE_ZONE.top);
+    }
+  });
+
+  it("on a phone the paper flips only while no copy is below the window", () => {
+    // copy starts a window below its section's top, so the area is empty when a section's end reaches the window
+    for (const b of BEATS.slice(0, -1)) {
+      const flip = storyAt(b.id, b.lengthVh - PHONE_WINDOW_VH);
+      expect(phoneToneAt(flip - 0.001), b.id).toBe(b.tone);
+      expect(phoneToneAt(flip + 0.001), b.id).toBe(BEATS[BEATS.indexOf(b) + 1].tone);
+    }
+    // the phone look follows that tone, blueprint with it
+    const s = sceneStateAt(storyAt("specs", 100), "portrait");
+    expect([s.paper, s.blueprint]).toEqual([1, 1]);
+    expect(sceneStateAt(storyAt("pressure", 50), "portrait").paper).toBe(0);
   });
 
   it("only highlights parts that VOLTA's copy names", () => {

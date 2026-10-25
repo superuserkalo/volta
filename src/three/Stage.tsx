@@ -1,9 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { damp } from "@/story/position";
-import { sceneStateAt } from "@/story/scene-state";
+import { isPhone } from "@/story/phone";
+import { PHONE_ZONE, sceneStateAt, type Zone } from "@/story/scene-state";
 import { story } from "@/story/store";
 import type { StateSource } from "./Scene";
 
@@ -19,15 +20,26 @@ type Mode = "pending" | "3d" | "static";
  * the stage cuts to the new shot instead of flying the machine across the page.
  */
 const follow = { p: 0, jumps: -1, t: -1, cut: true };
+
+/**
+ * Phone: where the machine may sit, in px from the top of the screen — below the
+ * header, above the window's fading edge. Measured on layout changes (see Stage).
+ */
+const phone: { top: number; bottom: number; windowShare?: number[] } = { top: 0, bottom: 0 };
+function phoneZone(height: number): Zone {
+  if (!phone.bottom || height <= 0) return PHONE_ZONE;
+  return { top: phone.top / height, bottom: phone.bottom / height, windowShare: phone.windowShare };
+}
+
 function followed(lambda: number): StateSource {
-  return (framing, aspect, elapsed) => {
+  return (framing, aspect, elapsed, height) => {
     const raw = story.get();
     const dt = follow.t < 0 ? 0 : Math.min(0.1, Math.max(0, elapsed - follow.t));
     follow.t = elapsed;
     follow.cut = follow.jumps !== story.jumps();
     follow.jumps = story.jumps();
     follow.p = follow.cut ? raw : damp(follow.p, raw, lambda, dt);
-    return sceneStateAt(follow.p, framing, aspect);
+    return sceneStateAt(follow.p, framing, aspect, phoneZone(height));
   };
 }
 const jumped = () => follow.cut;
@@ -57,8 +69,27 @@ export function Stage() {
     // Browser-only checks (WebGL, reduced motion), so they run after hydration.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMode(m);
-    setMobile(window.innerWidth < 768);
+    setMobile(isPhone(window.innerWidth));
     document.documentElement.classList.toggle("no-3d", m === "static");
+  }, []);
+
+  // Phone framing: the machine sits between the header and the window's fading edge.
+  const shield = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const header = document.querySelector("header");
+    const sections = [...document.querySelectorAll<HTMLElement>("section[data-beat]")];
+    const measure = () => {
+      const win = shield.current?.offsetHeight ?? 0;
+      phone.top = (header?.offsetHeight ?? 0) + 6;
+      phone.bottom = win - 30;
+      phone.windowShare = sections.map((s) => win / Math.max(1, s.offsetHeight));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (shield.current) ro.observe(shield.current);
+    if (header) ro.observe(header);
+    sections.forEach((s) => ro.observe(s));
+    return () => ro.disconnect();
   }, []);
 
   return (
@@ -81,7 +112,7 @@ export function Stage() {
       {mode === "3d" && (
         <div className="absolute inset-0 transition-opacity duration-700" style={{ opacity: ready ? 1 : 0 }}>
           <Scene
-            initial={sceneStateAt(story.get(), mobile ? "portrait" : "landscape")}
+            initial={sceneStateAt(story.get(), mobile ? "portrait" : "landscape", undefined, phoneZone(window.innerHeight))}
             // the smoothing happens on the scroll position (see `followed`), so the stage shows it as is
             lambda={Infinity}
             dprMax={mobile ? 1.5 : 2}
@@ -92,6 +123,10 @@ export function Stage() {
           />
         </div>
       )}
+      {/* Phone: the machine window catches taps, so they never land on copy that has scrolled under it.
+          Dragging on it still scrolls the page. Off once the machine has left (the CTA). */}
+      <div ref={shield} className="stage-shield pointer-events-auto absolute inset-x-0 top-0 h-[var(--stage-window)] md:hidden" />
+      <div className="stage-edge absolute inset-x-0 top-[calc(var(--stage-window)-2rem)] h-8 bg-linear-to-b from-transparent to-[var(--stage-bg,var(--bg))] md:hidden" />
     </div>
   );
 }

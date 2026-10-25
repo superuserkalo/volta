@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { damp } from "@/story/position";
+import { isPhone } from "@/story/phone";
 import type { Framing, SceneState, Vec3 } from "@/story/scene-state";
 import { SceneStateContext } from "./machine/context";
 import { Machine } from "./machine/Machine";
@@ -27,7 +28,8 @@ const DOOR_SECONDS = 1.6;
 const PACK_OFF_SECONDS = 0.35;
 const PACK_ON_SECONDS = 0.5;
 
-export type StateSource = (framing: Framing, aspect: number, elapsed: number) => SceneState;
+/** `height` = canvas height in CSS px (the phone framing places the machine in px from the top). */
+export type StateSource = (framing: Framing, aspect: number, elapsed: number, height: number) => SceneState;
 
 const dampVec = (a: Vec3, b: Vec3, lambda: number, dt: number): Vec3 => [
   damp(a[0], b[0], lambda, dt),
@@ -55,14 +57,16 @@ function Rig({
   const bg = useMemo(() => new THREE.Color(), []);
   const pos = useMemo(() => new THREE.Vector3(), []);
   const tgt = useMemo(() => new THREE.Vector3(), []);
+  const shown = useRef({ bg: "", present: "" });
   useEffect(() => {
     // dev only: lets scripts read what the stage is showing
     if (process.env.NODE_ENV !== "production") Object.assign(window, { __voltaStage: stateRef });
   }, [stateRef]);
   useFrame((st, dtRaw) => {
     const dt = Math.min(dtRaw, 0.1);
-    const framing: Framing = size.height > size.width ? "portrait" : "landscape";
-    const target = source(framing, size.width / size.height, st.clock.elapsedTime);
+    // same breakpoint as the page layout: phones put the machine in the window at the top
+    const framing: Framing = isPhone(size.width) ? "portrait" : "landscape";
+    const target = source(framing, size.width / size.height, st.clock.elapsedTime, size.height);
     const cur = stateRef.current;
     // A jump, not a scroll (reload, anchor link): show the new shot as it is, no fly-over.
     const isCut = cut?.() ?? false;
@@ -104,6 +108,12 @@ function Rig({
     scene.background = bg;
     // Leaving the stage: fade the whole canvas so the page below shows through.
     gl.domElement.style.opacity = String(cur.presence);
+    // The phone page takes the stage's colour, and the window stops catching taps once the machine has left.
+    const hex = `#${bg.getHexString()}`;
+    const present = cur.presence > 0.5 ? "true" : "false";
+    const root = document.documentElement;
+    if (hex !== shown.current.bg) root.style.setProperty("--stage-bg", (shown.current.bg = hex));
+    if (present !== shown.current.present) root.dataset.stagePresent = shown.current.present = present;
   }, -1);
   return null;
 }

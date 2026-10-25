@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   beat: BeatId;
-  /** Desktop placement of the text column; mobile always uses the bottom panel. */
+  /** Desktop placement of the text column; phones always put the copy below the machine window. */
   align?: "left" | "right" | "center";
   className?: string;
   children: ReactNode;
@@ -16,6 +16,10 @@ type Props = {
  * A beat of the scroll story. The section is as tall as the beat's scroll
  * distance; its content is pinned (sticky) for that distance while the 3D
  * stage behind it animates.
+ *
+ * Phones (see story/phone.ts): the copy starts below the machine window and is
+ * the sticky part itself, so copy taller than the space left scrolls normally
+ * until its end is on screen, then stays (globals.css, `.beat-copy`).
  */
 export function Section({ beat, align = "left", className, children, stopsVh = [] }: Props) {
   const def = BEATS.find((b) => b.id === beat)!;
@@ -25,7 +29,7 @@ export function Section({ beat, align = "left", className, children, stopsVh = [
       data-beat={beat}
       data-tone={def.tone}
       style={{ minHeight: `${def.lengthVh}svh` }}
-      className="relative"
+      className="relative max-md:flex max-md:flex-col"
     >
       {stopsVh.map((vh) => (
         <div
@@ -36,13 +40,13 @@ export function Section({ beat, align = "left", className, children, stopsVh = [
           style={{ top: `${vh}svh` }}
         />
       ))}
-      <div className="sticky top-0 flex h-svh w-full overflow-hidden">
+      <div className="beat-pin flex w-full max-md:flex-1 md:sticky md:top-0 md:h-svh md:overflow-hidden">
         <div
           data-panel
           className={cn(
             "beat-panel relative z-10 mx-auto flex w-full max-w-[1440px] flex-col px-4 md:px-12 lg:px-[7.5rem]",
-            // mobile: content sits in the lower part of the screen
-            "justify-end pb-6 md:pb-0",
+            // phone: the copy starts below the machine window
+            "justify-start pt-[var(--stage-window)] pb-14 md:pt-0 md:pb-0",
             align === "center" ? "md:items-center md:justify-center md:text-center" : "md:justify-center",
             className,
           )}
@@ -97,7 +101,8 @@ export function Meta({ children }: { children: ReactNode }) {
 
 export function Caption({ children }: { children: ReactNode }) {
   return (
-    <p data-reveal className="meta mt-3 text-[0.62rem] text-text-4 md:text-xs">
+    // repeats the hero's caption; phones show it once, in the hero
+    <p data-reveal className="meta mt-3 hidden text-[0.62rem] text-text-4 md:block md:text-xs">
       {children}
     </p>
   );
