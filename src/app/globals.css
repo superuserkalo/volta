@@ -173,6 +173,25 @@ html[data-tone="light"] [data-progress-rail] .tone-chrome-track {
   background: var(--paper);
 }
 
+/* The hero still fades out over the first screen of scroll, tied to the scroll
+   position itself, so it is already gone when a reload lands further down.
+   Without the 3D stage it stays as the backdrop. */
+@keyframes poster-leave {
+  to {
+    opacity: 0;
+  }
+}
+@supports (animation-timeline: scroll()) {
+  .stage-poster {
+    animation: poster-leave linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 80vh;
+  }
+  .no-3d .stage-poster {
+    animation: none;
+  }
+}
+
 /* Header turns solid once the page scrolls */
 html[data-scrolled="true"] .chrome-header {
   pointer-events: auto;

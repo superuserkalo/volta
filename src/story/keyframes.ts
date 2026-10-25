@@ -48,8 +48,8 @@ function build(steps: readonly ([number, Patch] | [number, Patch, Ease])[]) {
   return out;
 }
 
-/** Story positions where a battery sits seated; the page snaps and holds on each. */
-export const POWER_STOPS = [5.3, 5.455, 5.605, 5.775] as const;
+/** Middle of each battery's hold (seated, not moving), in order B-mount, V-mount, A-mount, power-tool. */
+export const POWER_HOLDS = [5.275, 5.435, 5.6, 5.77] as const;
 
 // Timing rule: a beat's copy is pinned for (length − 100vh) and the next
 // beat's copy scrolls in during the last 100vh. Every move that could cross
@@ -85,24 +85,24 @@ export const KEYFRAMES = build([
   [4.6, { panelLights: 4 }],
   [4.75, { highlight: "modular-port", shot: { focus: [0, 0.92, 0.3], elev: 0.48, fit: 0.38 } }],
   [4.84, { highlight: null }],
-  [4.98, {}],
+  [5.0, {}],
 
   // 5 · power — once its copy is in: pull back and turn to the back in one move, battery seated the whole way
-  [5.13, { machineYaw: 1.0, shot: { focus: [0, 0.5, -0.05], elev: 0.28, fit: 0.74, side: 1 } }],
-  [5.27, { machineYaw: 2.45, shot: { focus: [0, 0.45, -0.3], elev: 0.15, fit: 0.64 } }],
-  // then each pack comes off, the next one clicks on, and the page holds on it (POWER_STOPS)
-  [5.33, {}],
-  [5.375, { batteryAttach: 0 }],
-  [5.38, { battery: "v-mount" }],
-  [5.43, { batteryAttach: 1 }],
-  [5.48, {}],
-  [5.525, { batteryAttach: 0 }],
-  [5.53, { battery: "a-mount" }],
-  [5.58, { batteryAttach: 1 }],
-  [5.63, {}],
-  [5.675, { batteryAttach: 0 }],
-  [5.68, { battery: "power-tool" }],
-  [5.73, { batteryAttach: 1 }],
+  [5.11, { machineYaw: 1.0, shot: { focus: [0, 0.5, -0.05], elev: 0.28, fit: 0.74, side: 1 } }],
+  [5.24, { machineYaw: 2.45, shot: { focus: [0, 0.45, -0.3], elev: 0.15, fit: 0.64 } }],
+  // then each pack holds for ~40vh of scroll; between holds the old one comes off and the next locks on quickly
+  [5.31, {}],
+  [5.35, { batteryAttach: 0 }],
+  [5.355, { battery: "v-mount" }],
+  [5.395, { batteryAttach: 1 }],
+  [5.475, {}],
+  [5.515, { batteryAttach: 0 }],
+  [5.52, { battery: "a-mount" }],
+  [5.56, { batteryAttach: 1 }],
+  [5.64, {}],
+  [5.68, { batteryAttach: 0 }],
+  [5.685, { battery: "power-tool" }],
+  [5.725, { batteryAttach: 1 }],
   [5.84, {}],
 
   // 6 · repair — blueprint again, the machine comes apart and goes back together

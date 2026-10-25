@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { BEATS } from "./beats";
-import { POWER_STOPS } from "./keyframes";
+import { POWER_HOLDS } from "./keyframes";
 import { sceneStateAt, type Framing, type SceneState } from "./scene-state";
 
 // trayOpen is not here: the door is a timed activation (see `gate`), not scrubbed.
@@ -61,14 +61,14 @@ describe("sceneStateAt", () => {
     expect(at(4.8).highlight).toBe("modular-port");
   });
   it("control → power: the battery stays seated while the machine turns to its back", () => {
-    for (let p = 4.84; p <= 5.33; p += 0.01) {
+    for (let p = 4.84; p <= 5.31; p += 0.01) {
       expect(at(p).batteryAttach, `p=${p.toFixed(2)}`).toBeCloseTo(1);
       expect(at(p).battery).toBe("b-mount");
     }
   });
   it("power: each pack is seated and held at its stop, in order, while the copy is pinned", () => {
     const order = ["b-mount", "v-mount", "a-mount", "power-tool"];
-    POWER_STOPS.forEach((stop, i) => {
+    POWER_HOLDS.forEach((stop, i) => {
       // pinned power copy: until 100vh before the end of the 500vh beat
       expect(stop).toBeLessThan(5.8);
       for (const d of [-0.02, 0, 0.02]) {

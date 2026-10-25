@@ -9,6 +9,19 @@ const Scene = dynamic(() => import("./Scene"), { ssr: false });
 
 type Mode = "pending" | "3d" | "static";
 
+/**
+ * True once after the story jumps instead of scrolling (reload restoring the
+ * scroll, an anchor link, a drag of the scrollbar): the stage then cuts to the
+ * new shot instead of flying the machine across whatever is on screen.
+ */
+let lastP = -1;
+function jumped() {
+  const p = story.get();
+  const cut = lastP < 0 || Math.abs(p - lastP) > 0.5;
+  lastP = p;
+  return cut;
+}
+
 function detectMode(): Mode {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return "static";
   try {
@@ -40,17 +53,21 @@ export function Stage() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-0" aria-hidden data-stage={mode} data-ready={ready}>
-      <picture>
-        <source media="(max-width: 767px)" srcSet="/media/poster-hero-mobile.webp" />
-        <img
-          src="/media/poster-hero.webp"
-          alt=""
-          data-poster
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
-          style={{ opacity: mode === "3d" && ready ? 0 : 1 }}
-        />
-      </picture>
+      {/* The hero still belongs to the hero: it leaves with the first screen of scroll (CSS, so a
+          reload further down never flashes it before the scripts run). */}
+      <div className="stage-poster absolute inset-0">
+        <picture>
+          <source media="(max-width: 767px)" srcSet="/media/poster-hero-mobile.webp" />
+          <img
+            src="/media/poster-hero.webp"
+            alt=""
+            data-poster
+            fetchPriority="high"
+            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+            style={{ opacity: mode === "3d" && ready ? 0 : 1 }}
+          />
+        </picture>
+      </div>
       {mode === "3d" && (
         <div className="absolute inset-0 transition-opacity duration-700" style={{ opacity: ready ? 1 : 0 }}>
           <Scene
@@ -59,6 +76,7 @@ export function Stage() {
             dprMax={mobile ? 1.5 : 2}
             onReady={() => setReady(true)}
             source={(framing, aspect) => sceneStateAt(story.get(), framing, aspect)}
+            cut={jumped}
           />
         </div>
       )}

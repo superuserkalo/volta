@@ -25,7 +25,17 @@ function cloneState(s: SceneState): SceneState {
 }
 
 /** Damps the displayed state toward the source every frame and drives camera + background. */
-function Rig({ source, lambda, stateRef }: { source: StateSource; lambda: number; stateRef: React.RefObject<SceneState> }) {
+function Rig({
+  source,
+  lambda: baseLambda,
+  stateRef,
+  cut,
+}: {
+  source: StateSource;
+  lambda: number;
+  stateRef: React.RefObject<SceneState>;
+  cut?: () => boolean;
+}) {
   const { camera, scene, size, gl } = useThree();
   const bg = useMemo(() => new THREE.Color(), []);
   const pos = useMemo(() => new THREE.Vector3(), []);
@@ -35,14 +45,19 @@ function Rig({ source, lambda, stateRef }: { source: StateSource; lambda: number
     const framing: Framing = size.height > size.width ? "portrait" : "landscape";
     const target = source(framing, size.width / size.height, st.clock.elapsedTime);
     const cur = stateRef.current;
+    // A jump, not a scroll (reload, anchor link): show the new shot as it is, no fly-over.
+    const isCut = cut?.() ?? false;
+    const lambda = isCut ? 1e6 : baseLambda;
     for (const k of NUMERIC) cur[k] = damp(cur[k], target[k], lambda, dt);
     // A pack is only swapped once the one on screen is fully off, so a fast scroll never pops it.
+    // Packs follow the scroll tighter than the camera so they land with a firm stop, not a drift.
+    if (isCut) cur.battery = target.battery;
     const swapping = cur.battery !== target.battery;
-    cur.batteryAttach = damp(cur.batteryAttach, swapping ? 0 : target.batteryAttach, swapping ? lambda * 1.6 : lambda, dt);
+    cur.batteryAttach = damp(cur.batteryAttach, swapping ? 0 : target.batteryAttach, lambda * 2.2, dt);
     if (swapping && cur.batteryAttach < 0.02) cur.battery = target.battery;
     cur.highlight = target.highlight;
     cur.gate = target.gate;
-    const step = dt / DOOR_SECONDS;
+    const step = isCut ? 1 : dt / DOOR_SECONDS;
     cur.trayOpen = cur.trayOpen < target.trayOpen ? Math.min(target.trayOpen, cur.trayOpen + step) : Math.max(target.trayOpen, cur.trayOpen - step);
     cur.focus = target.focus;
     const c = cur.camera;
@@ -97,12 +112,15 @@ export default function Scene({
   lambda = 6,
   dprMax = 2,
   onReady,
+  cut,
 }: {
   source: StateSource;
   initial: SceneState;
   lambda?: number;
   dprMax?: number;
   onReady?: () => void;
+  /** Called every frame; true = cut straight to the source state instead of easing toward it. */
+  cut?: () => boolean;
 }) {
   const stateRef = useRef<SceneState>(cloneState(initial));
   return (
@@ -117,7 +135,7 @@ export default function Scene({
       }}
     >
       <SceneStateContext.Provider value={stateRef}>
-        <Rig source={source} lambda={lambda} stateRef={stateRef} />
+        <Rig source={source} lambda={lambda} stateRef={stateRef} cut={cut} />
         <Studio />
         <hemisphereLight args={["#f2f2f2", "#202224", 0.45]} />
         <directionalLight position={[2.5, 4, 3]} intensity={1.1} />

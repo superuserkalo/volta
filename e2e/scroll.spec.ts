@@ -79,6 +79,21 @@ test("header turns solid after scrolling", async ({ page }) => {
   await expect.poll(bg).not.toBe("rgba(0, 0, 0, 0)");
 });
 
+test("reloading at the bottom never flashes the hero machine", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForFunction(() => (window as VoltaWindow).__volta);
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await page.waitForTimeout(300);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const poster = page.locator(".stage-poster");
+  expect(await poster.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeLessThan(0.05);
+});
+
+test("the battery section has no scroll snap stops", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.locator("#power [data-gate]")).toHaveCount(0);
+});
+
 test("the quote has a scroll gate at its activation point", async ({ page }) => {
   await page.goto("/");
   const gate = page.locator("#quote [data-gate]");
