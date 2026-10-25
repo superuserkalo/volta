@@ -13,7 +13,7 @@ import { Callouts } from "./machine/Callouts";
 const DARK = new THREE.Color("#131516");
 const PAPER = new THREE.Color("#d9d6d3");
 
-const NUMERIC = ["machineYaw", "paper", "blueprint", "xray", "callouts", "explode", "batteryAttach", "boilerGlow", "panelLights", "presence"] as const;
+const NUMERIC = ["machineYaw", "paper", "blueprint", "xray", "callouts", "explode", "boilerGlow", "panelLights", "presence"] as const;
 
 /** The door is an activation, not a scrub: it opens or closes over this many seconds once the gate flips. */
 const DOOR_SECONDS = 1.6;
@@ -36,7 +36,10 @@ function Rig({ source, lambda, stateRef }: { source: StateSource; lambda: number
     const target = source(framing, size.width / size.height, st.clock.elapsedTime);
     const cur = stateRef.current;
     for (const k of NUMERIC) cur[k] = damp(cur[k], target[k], lambda, dt);
-    cur.battery = target.battery;
+    // A pack is only swapped once the one on screen is fully off, so a fast scroll never pops it.
+    const swapping = cur.battery !== target.battery;
+    cur.batteryAttach = damp(cur.batteryAttach, swapping ? 0 : target.batteryAttach, swapping ? lambda * 1.6 : lambda, dt);
+    if (swapping && cur.batteryAttach < 0.02) cur.battery = target.battery;
     cur.highlight = target.highlight;
     cur.gate = target.gate;
     const step = dt / DOOR_SECONDS;

@@ -23,6 +23,9 @@ describe("positionFromScroll", () => {
     expect(positionFromScroll(-40, tops, heights)).toBe(0);
     expect(positionFromScroll(9999, tops, heights)).toBe(3);
   });
+  it("a whole-pixel scroll just short of a fractional section top lands on that section", () => {
+    expect(positionFromScroll(300, [0, 100, 300.19], heights)).toBe(2);
+  });
 });
 
 describe("damp", () => {

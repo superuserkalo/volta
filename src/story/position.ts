@@ -9,8 +9,10 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 export function positionFromScroll(scrollY: number, tops: readonly number[], heights: readonly number[]): StoryPosition {
   const n = tops.length;
   if (n === 0 || scrollY <= tops[0]) return 0;
+  // Section tops can be fractional while scrollY is whole pixels: within 1px counts as the section's start.
+  const EPS = 1;
   for (let i = n - 1; i >= 0; i--) {
-    if (scrollY >= tops[i]) return i + clamp((scrollY - tops[i]) / Math.max(1, heights[i]), 0, 1);
+    if (scrollY >= tops[i] - EPS) return i + clamp((scrollY - tops[i]) / Math.max(1, heights[i]), 0, 1);
   }
   return 0;
 }

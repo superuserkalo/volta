@@ -11,6 +11,8 @@ import { Block, Cyl } from "./shapes";
 
 const MOUNT_Z = DIM.back - 0.006; // back face of the native B-mount plate
 const ease = (k: number) => k * k * (3 - 2 * k);
+/** Share of the attach travel spent coming in; the rest is the drop into the lock. */
+const LOCK_AT = 0.68;
 
 /** Shapes are generic silhouettes of each battery standard, never a specific brand's pack. */
 function Variant({ kind }: { kind: Exclude<BatteryVariant, "none"> }) {
@@ -59,8 +61,11 @@ export function Power() {
   const variants = useRef<Record<string, THREE.Group | null>>({});
   useFrame(() => {
     const s = state.current;
-    const off = 1 - ease(Math.min(1, Math.max(0, s.batteryAttach)));
-    if (slider.current) slider.current.position.set(0, 0.36 + off * 0.07, MOUNT_Z - 0.004 - off * 0.32);
+    // Like a real plate mount: the pack comes straight in against the back, then drops down and locks.
+    const a = Math.min(1, Math.max(0, s.batteryAttach));
+    const approach = 1 - ease(Math.min(1, a / LOCK_AT));
+    const lock = a <= LOCK_AT ? 0 : ((a - LOCK_AT) / (1 - LOCK_AT)) ** 2;
+    if (slider.current) slider.current.position.set(0, 0.36 + (1 - lock) * 0.07, MOUNT_Z - 0.004 - approach * 0.32);
     for (const v of VARIANTS) {
       const g = variants.current[v];
       if (g) g.visible = s.battery === v;

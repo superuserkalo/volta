@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
 import { BEATS } from "./beats";
+import { POWER_STOPS } from "./keyframes";
 import { sceneStateAt, type Framing, type SceneState } from "./scene-state";
 
 // trayOpen is not here: the door is a timed activation (see `gate`), not scrubbed.
@@ -57,13 +58,24 @@ describe("sceneStateAt", () => {
   });
   it("control: all four panel lights", () => {
     expect(at(4.7).panelLights).toBeCloseTo(4);
-    expect(at(4.9).highlight).toBe("modular-port");
+    expect(at(4.8).highlight).toBe("modular-port");
   });
-  it("power: battery variants in order", () => {
-    expect(at(5.3).battery).toBe("b-mount");
-    expect(at(5.55).battery).toBe("v-mount");
-    expect(at(5.75).battery).toBe("a-mount");
-    expect(at(5.95).battery).toBe("power-tool");
+  it("control → power: the battery stays seated while the machine turns to its back", () => {
+    for (let p = 4.84; p <= 5.33; p += 0.01) {
+      expect(at(p).batteryAttach, `p=${p.toFixed(2)}`).toBeCloseTo(1);
+      expect(at(p).battery).toBe("b-mount");
+    }
+  });
+  it("power: each pack is seated and held at its stop, in order, while the copy is pinned", () => {
+    const order = ["b-mount", "v-mount", "a-mount", "power-tool"];
+    POWER_STOPS.forEach((stop, i) => {
+      // pinned power copy: until 100vh before the end of the 500vh beat
+      expect(stop).toBeLessThan(5.8);
+      for (const d of [-0.02, 0, 0.02]) {
+        expect(at(stop + d).battery).toBe(order[i]);
+        expect(at(stop + d).batteryAttach).toBeCloseTo(1);
+      }
+    });
   });
   it("repair: explodes, reassembles, and leaves the paper before the lab copy", () => {
     expect(at(6.45).explode).toBeGreaterThanOrEqual(0.95);
@@ -77,15 +89,25 @@ describe("sceneStateAt", () => {
     expect(at(8.5).gate).toBe(true);
     expect(at(8.5).trayOpen).toBe(1);
   });
-  it("the machine leaves after the quote and stays gone for the CTA", () => {
+  it("the machine rides up and out with the quote and stays gone for the CTA", () => {
     expect(at(8.4).presence).toBe(1);
-    expect(at(8.95).presence).toBeCloseTo(0);
+    // the quote copy scrolls out over 8.6 … 9.0 (100vh); the machine rises at the same rate
+    for (const p of [8.7, 8.8, 8.9]) {
+      expect(at(p).camera.target[1]).toBeLessThan(at(p - 0.05).camera.target[1]);
+    }
+    expect(at(8.8).presence).toBe(1);
+    expect(at(9.0).presence).toBeCloseTo(0);
     expect(at(9.5).presence).toBeCloseTo(0);
+  });
+  it("starts moving on the very first scroll", () => {
+    expect(Math.abs(at(0.02).machineYaw - at(0).machineYaw)).toBeGreaterThan(0.005);
   });
 
   it.each<Framing>(["landscape", "portrait"])("never jumps while visible (%s)", (framing) => {
+    // one step = 1vh of scroll (beats differ in length, so the step size in story units does too)
+    const stepAt = (p: number) => 1 / BEATS[Math.min(BEATS.length - 1, Math.floor(p))].lengthVh;
     let prev = sceneStateAt(0, framing);
-    for (let p = 0.005; p <= BEATS.length; p += 0.005) {
+    for (let p = stepAt(0); p <= BEATS.length; p += stepAt(p)) {
       const s = sceneStateAt(p, framing);
       const a = numeric(prev);
       const b = numeric(s);
@@ -105,7 +127,7 @@ describe("sceneStateAt", () => {
   it("on a laptop the machine stays right of the text column while copy is on the left", () => {
     // beats whose copy sits in the left column, sampled while that copy is on screen
     const leftCopy: [number, number][] = [
-      [0, 0.9], [1.75, 2.5], [2.5, 3.5], [3.5, 4.5], [4.5, 5.67], [5.67, 6.75], [6.75, 7.5], [7.5, 8.6],
+      [0, 0.6], [1.75, 2.5], [2.5, 3.5], [3.5, 4.5], [4.5, 5.8], [5.8, 6.75], [6.75, 7.5], [7.5, 8.6],
     ];
     for (const [a, b] of leftCopy) {
       for (let p = a; p <= b; p += 0.02) {

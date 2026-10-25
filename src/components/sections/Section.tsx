@@ -8,8 +8,8 @@ type Props = {
   align?: "left" | "right" | "center";
   className?: string;
   children: ReactNode;
-  /** Fraction of the section where the scroll snaps and stops once (the quote's door gate). */
-  gateAt?: number;
+  /** Fractions of the section where the scroll snaps and stops once (the quote's door gate, each battery). */
+  stops?: readonly number[];
 };
 
 /**
@@ -17,7 +17,7 @@ type Props = {
  * distance; its content is pinned (sticky) for that distance while the 3D
  * stage behind it animates.
  */
-export function Section({ beat, align = "left", className, children, gateAt }: Props) {
+export function Section({ beat, align = "left", className, children, stops = [] }: Props) {
   const def = BEATS.find((b) => b.id === beat)!;
   return (
     <section
@@ -27,14 +27,15 @@ export function Section({ beat, align = "left", className, children, gateAt }: P
       style={{ minHeight: `${def.lengthVh}svh` }}
       className="relative"
     >
-      {gateAt !== undefined && (
+      {stops.map((at) => (
         <div
+          key={at}
           aria-hidden
           data-gate
           className="pointer-events-none absolute left-0 h-px w-px snap-start snap-always"
-          style={{ top: `${gateAt * 100}%` }}
+          style={{ top: `${at * 100}%` }}
         />
-      )}
+      ))}
       <div className="sticky top-0 flex h-svh w-full overflow-hidden">
         <div
           data-panel
